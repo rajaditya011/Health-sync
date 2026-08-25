@@ -43,6 +43,22 @@ RULES:
 - Include a disclaimer that this is AI analysis and must be verified by a doctor
 - If the text seems incomplete or unclear, do your best and note limitations`;
 
+        let finalReportText = reportText;
+        if (reportText.includes('[PDF_BASE64]')) {
+            try {
+                const base64Match = reportText.match(/\[PDF_BASE64\](.*?)\[\/PDF_BASE64\]/s);
+                if (base64Match && base64Match[1]) {
+                    const pdfBuffer = Buffer.from(base64Match[1], 'base64');
+                    const pdfParse = require('pdf-parse');
+                    const pdfData = await pdfParse(pdfBuffer);
+                    finalReportText = `File: ${fileName}\nContent:\n${pdfData.text}`;
+                }
+            } catch (e) {
+                console.error("PDF Parsing error:", e);
+                finalReportText = "Failed to extract text from PDF report.";
+            }
+        }
+
         let data;
         for (let i = 0; i < GROQ_KEYS.length; i++) {
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -52,10 +68,10 @@ RULES:
                     'Authorization': `Bearer ${GROQ_KEYS[i]}`,
                 },
                 body: JSON.stringify({
-                    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                    model: 'openai/gpt-oss-20b',
                     messages: [
                         { role: 'system', content: systemPrompt },
-                        { role: 'user', content: `Analyze this medical report. File: ${fileName}.\n\nReport Content:\n${reportText}\n\nProvide structured analysis in JSON format.` },
+                        { role: 'user', content: `Analyze this medical report. File: ${fileName}.\n\nReport Content:\n${finalReportText}\n\nProvide structured analysis in JSON format.` },
                     ],
                     temperature: 0.3,
                     max_completion_tokens: 4096,

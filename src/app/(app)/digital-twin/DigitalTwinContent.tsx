@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import { Brain, X, Send, Mic, MicOff, ImagePlus } from 'lucide-react';
+import { Brain, X, Send, Mic, MicOff, ImagePlus, Volume2, VolumeX, AudioLines } from 'lucide-react';
 import { getCurrentUser, getVitals, getReports, getDigitalTwinChat, setDigitalTwinChat, generateId, saveVisionAnalysis, type ChatMessage } from '@/lib/store';
 import { buildAIContext, formatContextForAI } from '@/lib/ai-context';
 
@@ -287,6 +287,56 @@ export default function DigitalTwinPage() {
     const chatEndRef = useRef<HTMLDivElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const [chatImage, setChatImage] = useState<string | null>(null);
+    const [voiceMode, setVoiceMode] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [ttsEnabled, setTtsEnabled] = useState(true);
+    const [voiceLang, setVoiceLang] = useState<'en-IN' | 'hi-IN'>('en-IN');
+    const [voiceTranscript, setVoiceTranscript] = useState('');
+    const [voiceStatus, setVoiceStatus] = useState<'idle' | 'listening' | 'processing' | 'speaking'>('idle');
+    const recognitionRef = useRef<any>(null);
+    const synthRef = useRef<SpeechSynthesis | null>(null);
+
+    // Initialize speech synthesis
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            synthRef.current = window.speechSynthesis;
+        }
+        return () => {
+            synthRef.current?.cancel();
+        };
+    }, []);
+
+    // Text-to-speech helper
+    const speakText = useCallback((text: string) => {
+        if (!synthRef.current || !ttsEnabled) return;
+        synthRef.current.cancel();
+        // Strip markdown formatting for cleaner speech
+        const cleanText = text
+            .replace(/#{1,6}\s?/g, '')
+            .replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1')
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/`{1,3}[^`]*`{1,3}/g, '')
+            .replace(/\n{2,}/g, '. ')
+            .replace(/\n/g, '. ')
+            .replace(/- /g, '')
+            .trim();
+        // Limit length for TTS
+        const spokenText = cleanText.length > 800 ? cleanText.slice(0, 800) + '... For more details, please read the full response on screen.' : cleanText;
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        utterance.lang = voiceLang;
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        utterance.onstart = () => { setIsSpeaking(true); setVoiceStatus('speaking'); };
+        utterance.onend = () => { setIsSpeaking(false); setVoiceStatus('idle'); };
+        utterance.onerror = () => { setIsSpeaking(false); setVoiceStatus('idle'); };
+        synthRef.current.speak(utterance);
+    }, [ttsEnabled, voiceLang]);
+
+    const stopSpeaking = useCallback(() => {
+        synthRef.current?.cancel();
+        setIsSpeaking(false);
+        setVoiceStatus('idle');
+    }, []);
 
     // Load saved chat
     useEffect(() => {
@@ -424,9 +474,10 @@ If the user describes severe symptoms (chest pain, difficulty breathing, etc.), 
         setLoading(false);
     }, [inputText, chatImage, symptoms, chatMessages]);
 
-    // Voice input
+    // Voice input (inline mic button — fills text field)
     const toggleVoice = useCallback(() => {
         if (isListening) {
+            recognitionRef.current?.stop();
             setIsListening(false);
             return;
         }
@@ -440,9 +491,10 @@ If the user describes severe symptoms (chest pain, difficulty breathing, etc.), 
         }
 
         const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'en-IN';
+        recognition.lang = voiceLang;
 
         setIsListening(true);
 
@@ -461,7 +513,67 @@ If the user describes severe symptoms (chest pain, difficulty breathing, etc.), 
         };
 
         recognition.start();
-    }, [isListening]);
+    }, [isListening, voiceLang]);
+
+    // Voice assistant mode — full hands-free conversation
+    const startVoiceAssistant = useCallback(() => {
+        stopSpeaking();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const SpeechRecognition =
+            (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert('Speech recognition is not supported in this browser. Please use Chrome.');
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = voiceLang;
+
+        setVoiceStatus('listening');
+        setVoiceTranscript('');
+
+        recognition.onresult = (event: any) => {
+            let transcript = '';
+            for (let i = 0; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            setVoiceTranscript(transcript);
+            if (event.results[event.results.length - 1].isFinal) {
+                // Auto-send the message
+                setVoiceStatus('processing');
+                setVoiceTranscript(transcript);
+                sendMessage(transcript).then(() => {
+                    // After AI responds, speak it
+                    // The speakText is called in a useEffect watching chatMessages
+                });
+            }
+        };
+
+        recognition.onerror = () => {
+            setVoiceStatus('idle');
+        };
+
+        recognition.onend = () => {
+            if (voiceStatus === 'listening') {
+                setVoiceStatus('idle');
+            }
+        };
+
+        recognition.start();
+    }, [voiceLang, stopSpeaking, sendMessage, voiceStatus]);
+
+    // Auto-speak AI responses in voice mode
+    useEffect(() => {
+        if (voiceMode && chatMessages.length > 0) {
+            const lastMsg = chatMessages[chatMessages.length - 1];
+            if (lastMsg.role === 'ai' && !loading) {
+                speakText(lastMsg.content);
+            }
+        }
+    }, [chatMessages, voiceMode, loading, speakText]);
 
     const clearChat = useCallback(() => {
         setChatMessages([]);
@@ -689,20 +801,61 @@ If the user describes severe symptoms (chest pain, difficulty breathing, etc.), 
                             <Brain size={20} style={{ color: 'var(--color-primary)' }} />
                             <span style={{ fontWeight: 700 }}>HealthSync AI</span>
                         </div>
-                        {chatMessages.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {/* TTS toggle */}
                             <button
-                                onClick={clearChat}
+                                onClick={() => { setTtsEnabled(!ttsEnabled); if (isSpeaking) stopSpeaking(); }}
+                                title={ttsEnabled ? 'Mute AI voice' : 'Enable AI voice'}
                                 style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    color: 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontSize: 12,
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    color: ttsEnabled ? 'var(--color-primary)' : 'var(--text-muted)',
+                                    display: 'flex', alignItems: 'center', padding: 4,
                                 }}
                             >
-                                Clear Chat
+                                {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                             </button>
-                        )}
+                            {/* Voice Mode toggle */}
+                            <button
+                                onClick={() => {
+                                    setVoiceMode(!voiceMode);
+                                    if (voiceMode) { stopSpeaking(); setVoiceStatus('idle'); recognitionRef.current?.stop(); }
+                                }}
+                                title={voiceMode ? 'Exit voice mode' : 'Voice Assistant Mode'}
+                                style={{
+                                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                    fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+                                    background: voiceMode ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)' : 'var(--bg-card)',
+                                    color: voiceMode ? 'white' : 'var(--text-secondary)',
+                                    transition: 'all 0.3s ease',
+                                }}
+                            >
+                                <AudioLines size={14} />
+                                {voiceMode ? 'Voice On' : 'Voice'}
+                            </button>
+                            {/* Language toggle */}
+                            <button
+                                onClick={() => setVoiceLang(voiceLang === 'en-IN' ? 'hi-IN' : 'en-IN')}
+                                title={`Switch to ${voiceLang === 'en-IN' ? 'Hindi' : 'English'}`}
+                                style={{
+                                    padding: '6px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                                    border: '1px solid var(--border-color)', background: 'var(--bg-card)',
+                                    color: 'var(--text-secondary)', cursor: 'pointer',
+                                }}
+                            >
+                                {voiceLang === 'en-IN' ? 'EN' : 'हिं'}
+                            </button>
+                            {chatMessages.length > 0 && (
+                                <button
+                                    onClick={clearChat}
+                                    style={{
+                                        background: 'none', border: 'none',
+                                        color: 'var(--text-muted)', cursor: 'pointer', fontSize: 12,
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div
@@ -977,6 +1130,216 @@ If the user describes severe symptoms (chest pain, difficulty breathing, etc.), 
                     </div>
                 </div>
             </div>
+
+            {/* Voice Assistant Overlay */}
+            <AnimatePresence>
+                {voiceMode && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 9999,
+                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        }}
+                    >
+                        {/* Close button */}
+                        <button
+                            onClick={() => { setVoiceMode(false); stopSpeaking(); setVoiceStatus('idle'); recognitionRef.current?.stop(); }}
+                            style={{
+                                position: 'absolute', top: 24, right: 24,
+                                background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%',
+                                width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', color: 'white',
+                            }}
+                        >
+                            <X size={22} />
+                        </button>
+
+                        {/* Voice assistant branding */}
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            style={{ textAlign: 'center', marginBottom: 40 }}
+                        >
+                            <h2 style={{ color: 'white', fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
+                                🩺 Voice Assistant
+                            </h2>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>
+                                {voiceStatus === 'idle' && 'Tap the mic to start talking'}
+                                {voiceStatus === 'listening' && 'Listening... speak now'}
+                                {voiceStatus === 'processing' && 'Processing your message...'}
+                                {voiceStatus === 'speaking' && 'AI is responding...'}
+                            </p>
+                        </motion.div>
+
+                        {/* Animated mic orb */}
+                        <div style={{ position: 'relative', width: 160, height: 160, marginBottom: 32 }}>
+                            {/* Pulse rings */}
+                            {voiceStatus === 'listening' && (
+                                <>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, ease: 'easeOut' }}
+                                        style={{
+                                            position: 'absolute', inset: 0, borderRadius: '50%',
+                                            border: '2px solid #8B5CF6',
+                                        }}
+                                    />
+                                    <motion.div
+                                        animate={{ scale: [1, 2.2], opacity: [0.3, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, ease: 'easeOut', delay: 0.3 }}
+                                        style={{
+                                            position: 'absolute', inset: 0, borderRadius: '50%',
+                                            border: '2px solid #6D28D9',
+                                        }}
+                                    />
+                                    <motion.div
+                                        animate={{ scale: [1, 2.6], opacity: [0.2, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, ease: 'easeOut', delay: 0.6 }}
+                                        style={{
+                                            position: 'absolute', inset: 0, borderRadius: '50%',
+                                            border: '2px solid #A78BFA',
+                                        }}
+                                    />
+                                </>
+                            )}
+                            {voiceStatus === 'speaking' && (
+                                <>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.5], opacity: [0.3, 0] }}
+                                        transition={{ repeat: Infinity, duration: 0.8, ease: 'easeOut' }}
+                                        style={{
+                                            position: 'absolute', inset: 0, borderRadius: '50%',
+                                            border: '2px solid #0EA5E9',
+                                        }}
+                                    />
+                                    <motion.div
+                                        animate={{ scale: [1, 1.8], opacity: [0.2, 0] }}
+                                        transition={{ repeat: Infinity, duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                                        style={{
+                                            position: 'absolute', inset: 0, borderRadius: '50%',
+                                            border: '2px solid #38BDF8',
+                                        }}
+                                    />
+                                </>
+                            )}
+                            {/* Main mic button */}
+                            <motion.button
+                                whileTap={{ scale: 0.92 }}
+                                onClick={() => {
+                                    if (voiceStatus === 'listening') {
+                                        recognitionRef.current?.stop();
+                                        setVoiceStatus('idle');
+                                    } else if (voiceStatus === 'speaking') {
+                                        stopSpeaking();
+                                    } else if (voiceStatus === 'idle') {
+                                        startVoiceAssistant();
+                                    }
+                                }}
+                                disabled={voiceStatus === 'processing'}
+                                style={{
+                                    width: '100%', height: '100%', borderRadius: '50%', border: 'none',
+                                    cursor: voiceStatus === 'processing' ? 'wait' : 'pointer',
+                                    background: voiceStatus === 'listening'
+                                        ? 'linear-gradient(135deg, #8B5CF6, #6D28D9)'
+                                        : voiceStatus === 'speaking'
+                                        ? 'linear-gradient(135deg, #0EA5E9, #0284C7)'
+                                        : voiceStatus === 'processing'
+                                        ? 'linear-gradient(135deg, #F59E0B, #D97706)'
+                                        : 'linear-gradient(135deg, #6366F1, #4F46E5)',
+                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: voiceStatus === 'listening'
+                                        ? '0 0 60px rgba(139, 92, 246, 0.5)'
+                                        : voiceStatus === 'speaking'
+                                        ? '0 0 60px rgba(14, 165, 233, 0.5)'
+                                        : '0 0 40px rgba(99, 102, 241, 0.3)',
+                                    transition: 'all 0.3s ease',
+                                }}
+                            >
+                                {voiceStatus === 'listening' ? (
+                                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
+                                        <Mic size={48} />
+                                    </motion.div>
+                                ) : voiceStatus === 'speaking' ? (
+                                    <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 0.6 }}>
+                                        <Volume2 size={48} />
+                                    </motion.div>
+                                ) : voiceStatus === 'processing' ? (
+                                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                                        <Brain size={48} />
+                                    </motion.div>
+                                ) : (
+                                    <Mic size={48} />
+                                )}
+                            </motion.button>
+                        </div>
+
+                        {/* Live transcript */}
+                        {voiceTranscript && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                style={{
+                                    maxWidth: 500, padding: '16px 24px', borderRadius: 16,
+                                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white', fontSize: 16, textAlign: 'center', lineHeight: 1.6,
+                                    marginBottom: 20,
+                                }}
+                            >
+                                &ldquo;{voiceTranscript}&rdquo;
+                            </motion.div>
+                        )}
+
+                        {/* Last AI response in voice mode */}
+                        {chatMessages.length > 0 && chatMessages[chatMessages.length - 1].role === 'ai' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                style={{
+                                    maxWidth: 500, maxHeight: 200, overflowY: 'auto',
+                                    padding: '16px 24px', borderRadius: 16,
+                                    background: 'rgba(14, 165, 233, 0.08)', border: '1px solid rgba(14, 165, 233, 0.15)',
+                                    color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 1.7,
+                                }}
+                            >
+                                <p style={{ whiteSpace: 'pre-wrap' }}>
+                                    {chatMessages[chatMessages.length - 1].content.slice(0, 500)}
+                                    {chatMessages[chatMessages.length - 1].content.length > 500 ? '...' : ''}
+                                </p>
+                            </motion.div>
+                        )}
+
+                        {/* Quick actions in voice mode */}
+                        <div style={{ position: 'absolute', bottom: 40, display: 'flex', gap: 12 }}>
+                            <button
+                                onClick={() => setVoiceLang(voiceLang === 'en-IN' ? 'hi-IN' : 'en-IN')}
+                                style={{
+                                    padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)',
+                                    background: 'rgba(255,255,255,0.06)', color: 'white', fontSize: 13,
+                                    fontWeight: 600, cursor: 'pointer',
+                                }}
+                            >
+                                {voiceLang === 'en-IN' ? '🇮🇳 Switch to Hindi' : '🇬🇧 English में बदलें'}
+                            </button>
+                            {isSpeaking && (
+                                <button
+                                    onClick={stopSpeaking}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)',
+                                        background: 'rgba(239,68,68,0.1)', color: '#EF4444', fontSize: 13,
+                                        fontWeight: 600, cursor: 'pointer',
+                                    }}
+                                >
+                                    Stop Speaking
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

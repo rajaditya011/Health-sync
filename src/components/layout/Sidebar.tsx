@@ -8,13 +8,12 @@ import { useLanguage } from '@/lib/LanguageProvider';
 import {
     LayoutDashboard, Brain, HeartPulse, FileText, Pill,
     Stethoscope, Users, Settings, Phone, LogOut, Menu,
-    Activity, ClipboardList, Bell, Atom
+    Activity, ClipboardList, Bell
 } from 'lucide-react';
 
 const navItems = [
     { href: '/dashboard', tKey: 'nav.dashboard', icon: LayoutDashboard },
     { href: '/digital-twin', tKey: 'nav.digitalTwin', icon: Brain },
-    { href: '/physics-lab', tKey: 'nav.physicsLab', icon: Atom },
     { href: '/vitals', tKey: 'nav.vitals', icon: HeartPulse },
     { href: '/reports', tKey: 'nav.reports', icon: FileText },
     { href: '/recovery', tKey: 'nav.recovery', icon: Activity },
@@ -162,7 +161,7 @@ export default function Sidebar() {
 
                 {/* SOS Button */}
                 <div style={{ padding: '8px 8px' }}>
-                    <a href="tel:112" style={{
+                    <Link href="/emergency" style={{
                         display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
                         gap: 10, padding: '12px 16px', borderRadius: 12,
                         background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)',
@@ -171,7 +170,7 @@ export default function Sidebar() {
                     }}>
                         <Phone size={16} />
                         {!collapsed && 'Emergency SOS'}
-                    </a>
+                    </Link>
                 </div>
 
                 {/* User profile */}
@@ -185,8 +184,13 @@ export default function Sidebar() {
                             background: 'var(--gradient-primary)', display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
                             color: 'white', fontWeight: 700, fontSize: 14, flexShrink: 0,
+                            overflow: 'hidden'
                         }}>
-                            {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            {user?.avatar ? (
+                                <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                user?.name?.charAt(0).toUpperCase() || 'U'
+                            )}
                         </div>
                         {!collapsed && (
                             <div style={{ flex: 1, overflow: 'hidden' }}>

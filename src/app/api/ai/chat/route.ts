@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { PLATFORM_DOCTORS } from '@/lib/data';
 
 const GROQ_KEYS = [
     process.env.GROQ_API_KEY_1 || '',
@@ -13,7 +14,7 @@ async function callGroq(messages: { role: string; content: string }[], systemPro
             'Authorization': `Bearer ${GROQ_KEYS[keyIndex]}`,
         },
         body: JSON.stringify({
-            model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+            model: 'openai/gpt-oss-20b',
             messages: [
                 { role: 'system', content: systemPrompt },
                 ...messages.map(m => ({
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
         const { messages, systemPrompt, userContext } = await request.json();
 
         let fullPrompt = systemPrompt || getDefaultSystemPrompt();
+
+        const doctorsContext = PLATFORM_DOCTORS.map(d => `${d.name} (${d.specialty} - ${d.type})`).join(', ');
+        
+        fullPrompt += `\n\nAVAILABLE DOCTORS TO SUGGEST: ${doctorsContext}\nWhen analyzing a disease or symptom, explicitly recommend the BEST doctor from the above list for the user to consult based on the specialty and type of disease.`;
 
         if (userContext) {
             fullPrompt += `\n\n${userContext}`;

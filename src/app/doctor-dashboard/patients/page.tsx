@@ -5,11 +5,12 @@ import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Users, Search, Activity, FileText, ChevronLeft, Heart,
-    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar
+    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar, Bot, ShieldAlert
 } from 'lucide-react';
 import {
     getCurrentDoctor, getDoctorAppointments, getPatientData,
-    getDoctorNotes, addDoctorNote, generateId, type DoctorAccount
+    getDoctorNotes, addDoctorNote, generateId, type DoctorAccount,
+    getAllUsers, type UserProfile
 } from '@/lib/store';
 
 export default function PatientsPage() {
@@ -23,9 +24,11 @@ export default function PatientsPage() {
     const [activeTab, setActiveTab] = useState('overview');
     const [noteText, setNoteText] = useState('');
     const [noteType, setNoteType] = useState<'consultation' | 'follow-up' | 'general'>('consultation');
-    const [patientNotes, setPatientNotes] = useState<ReturnType<typeof getDoctorNotes>>([]);
+    const [patientNotes, setPatientNotes] = useState<any[]>([]);
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
 
     useEffect(() => {
+        setAllUsers(getAllUsers());
         const doc = getCurrentDoctor();
         if (!doc) return;
         setDoctor(doc);
@@ -34,6 +37,18 @@ export default function PatientsPage() {
         if (urlId) viewPatient(urlId, doc.id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
+
+    useEffect(() => {
+        const handleStorage = (e: StorageEvent) => {
+            if (!e.key || e.key.startsWith('hs_vitals') || e.key.startsWith('hs_reports') || e.key.startsWith('hs_intake')) {
+                if (selectedPatient && doctor) {
+                    setPatientDataState(getPatientData(selectedPatient, doctor.id));
+                }
+            }
+        };
+        window.addEventListener('storage', handleStorage);
+        return () => window.removeEventListener('storage', handleStorage);
+    }, [selectedPatient, doctor]);
 
     const viewPatient = (userId: string, docId?: string) => {
         const did = docId || doctor?.id || '';
@@ -56,10 +71,17 @@ export default function PatientsPage() {
     };
 
     // Get unique patients
-    const patientMap = new Map<string, { name: string; email: string; userId: string; lastDate: string }>();
+    const patientMap = new Map<string, { name: string; email: string; userId: string; lastDate: string; avatar?: string }>();
     appointments.forEach(a => {
-        if (!patientMap.has(a.userId) || a.date > (patientMap.get(a.userId)?.lastDate || '')) {
-            patientMap.set(a.userId, { name: a.patientName, email: a.patientEmail, userId: a.userId, lastDate: a.date });
+        const u = allUsers.find(u => u.id === a.userId);
+        if (!patientMap.has(a.userId) || new Date(a.date) > new Date(patientMap.get(a.userId)!.lastDate)) {
+            patientMap.set(a.userId, {
+                name: a.patientName || 'Unknown Patient',
+                email: u?.email || 'patient@example.com',
+                userId: a.userId,
+                lastDate: a.date,
+                avatar: u?.avatar
+            });
         }
     });
     const patients = Array.from(patientMap.values()).filter(p =>
@@ -68,6 +90,7 @@ export default function PatientsPage() {
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: Activity },
+        { id: 'intake', label: 'AI Intake', icon: Bot },
         { id: 'vitals', label: 'Vitals', icon: Heart },
         { id: 'reports', label: 'Reports', icon: FileText },
         { id: 'notes', label: 'Notes', icon: ClipboardList },
@@ -109,8 +132,12 @@ export default function PatientsPage() {
                                     onClick={() => viewPatient(p.userId)}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
-                                                {p.name.charAt(0)}
+                                            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, overflow: 'hidden' }}>
+                                                {p.avatar ? (
+                                                    <img src={p.avatar} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                    p.name.charAt(0)
+                                                )}
                                             </div>
                                             <div>
                                                 <div style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
@@ -139,8 +166,12 @@ export default function PatientsPage() {
                             {/* Patient Header */}
                             <div className="glass-card-static" style={{ padding: 22, marginBottom: 20 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                    <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 20 }}>
-                                        {patientData.profile.name.charAt(0)}
+                                    <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 20, overflow: 'hidden' }}>
+                                        {patientData.profile.avatar ? (
+                                            <img src={patientData.profile.avatar} alt={patientData.profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            patientData.profile.name.charAt(0)
+                                        )}
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h2 style={{ fontSize: 22, fontWeight: 700 }}>{patientData.profile.name}</h2>
@@ -224,6 +255,97 @@ export default function PatientsPage() {
                                             ))
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'intake' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                    {(!patientData.intakeSummaries || patientData.intakeSummaries.length === 0) ? (
+                                        <div className="glass-card-static" style={{ padding: 40, textAlign: 'center' }}>
+                                            <Bot size={40} style={{ color: 'var(--text-muted)', marginBottom: 12, opacity: 0.3 }} />
+                                            <p style={{ color: 'var(--text-muted)' }}>No AI Intake summaries found for this patient.</p>
+                                        </div>
+                                    ) : (
+                                        patientData.intakeSummaries.slice().reverse().map((summary: any, i: number) => (
+                                            <div key={summary.id} className="glass-card-static" style={{ padding: 20 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid var(--border-color)', paddingBottom: 12 }}>
+                                                    <h3 style={{ fontWeight: 700, fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <Bot size={18} color="var(--color-primary)" /> Clinical Intake Summary
+                                                    </h3>
+                                                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                                        {new Date(summary.date).toLocaleString()} • {summary.consultationType}
+                                                    </div>
+                                                </div>
+
+                                                {summary.redFlags && summary.redFlags.length > 0 && (
+                                                    <div style={{ background: '#FEF2F2', border: '1px solid #EF4444', borderRadius: 8, padding: 12, marginBottom: 16, display: 'flex', gap: 10, color: '#DC2626' }}>
+                                                        <ShieldAlert size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+                                                        <div>
+                                                            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>Red Flags Detected</div>
+                                                            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+                                                                {summary.redFlags.map((flag: string, j: number) => <li key={j}>{flag}</li>)}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Chief Complaint</div>
+                                                        <div style={{ fontSize: 14, fontWeight: 500 }}>{summary.chiefComplaint || 'N/A'}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>History of Present Illness (HPI)</div>
+                                                        <div style={{ fontSize: 14 }}>{summary.hpi || 'N/A'}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Past Medical History</div>
+                                                        <div style={{ fontSize: 14 }}>{summary.pastMedicalHistory || 'N/A'}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Drug / Allergy History</div>
+                                                        <div style={{ fontSize: 14 }}>{summary.drugAllergyHistory || 'N/A'}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Review of Systems (ROS)</div>
+                                                        <div style={{ fontSize: 14 }}>{summary.reviewOfSystems || 'N/A'}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Family & Genetic History</div>
+                                                        <div style={{ fontSize: 14 }}>{summary.familyHistory || 'N/A'}</div>
+                                                    </div>
+
+                                                    {summary.consultationType === 'AYUSH' && (
+                                                        <>
+                                                            <div style={{ gridColumn: '1 / -1', marginTop: 8, paddingTop: 16, borderTop: '1px dashed var(--border-color)' }}>
+                                                                <h4 style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: '#10B981', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <Leaf size={14} /> AYUSH Profile
+                                                                </h4>
+                                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                                                    <div>
+                                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Prakriti (Constitution)</div>
+                                                                        <div style={{ fontSize: 14 }}>{summary.prakriti || 'N/A'}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Vikriti (Imbalance)</div>
+                                                                        <div style={{ fontSize: 14 }}>{summary.vikriti || 'N/A'}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Agni (Digestion)</div>
+                                                                        <div style={{ fontSize: 14 }}>{summary.agni || 'N/A'}</div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Ahara-Vihara (Diet & Lifestyle)</div>
+                                                                        <div style={{ fontSize: 14 }}>{summary.aharaVihara || 'N/A'}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             )}
 
@@ -317,7 +439,9 @@ export default function PatientsPage() {
                                                     }}>{n.type}</span>
                                                     <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(n.date).toLocaleString()}</span>
                                                 </div>
-                                                <p style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{n.content}</p>
+                                                <div style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }} 
+                                                    dangerouslySetInnerHTML={{ __html: n.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} 
+                                                />
                                             </div>
                                         ))
                                     )}

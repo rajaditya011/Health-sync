@@ -161,6 +161,28 @@ export default function DashboardPage() {
                 </div>
             </div>
 
+            {/* AI Intake Call to Action */}
+            <Link href="/intake" style={{ textDecoration: 'none' }}>
+                <div className="glass-card" style={{
+                    padding: 24, marginBottom: 24, background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1))',
+                    border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    cursor: 'pointer'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #0EA5E9, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)' }}>
+                            <Bot size={24} />
+                        </div>
+                        <div>
+                            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Start New Check-In (AI Intake)</h2>
+                            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>Record your symptoms before seeing the doctor.</p>
+                        </div>
+                    </div>
+                    <div style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--color-primary)', color: 'white', fontWeight: 600, fontSize: 13 }}>
+                        Start →
+                    </div>
+                </div>
+            </Link>
+
             {/* Top Row: Score + Quick Actions */}
             <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 20, marginBottom: 24 }}>
                 {/* Health Score */}

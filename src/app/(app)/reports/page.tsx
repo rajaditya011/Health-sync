@@ -41,12 +41,20 @@ export default function ReportsPage() {
         return new Promise((resolve) => {
             const reader = new FileReader();
             const isImage = file.type.startsWith('image/');
+            const isPdf = file.type === 'application/pdf';
             if (isImage) {
                 reader.onload = (e) => {
                     const base64 = e.target?.result as string;
                     resolve(`[IMAGE_BASE64]${base64.split(',')[1] || base64}[/IMAGE_BASE64]\nFile: ${file.name}\nType: ${file.type}`);
                 };
                 reader.onerror = () => resolve('Error reading image file');
+                reader.readAsDataURL(file);
+            } else if (isPdf) {
+                reader.onload = (e) => {
+                    const base64 = e.target?.result as string;
+                    resolve(`[PDF_BASE64]${base64.split(',')[1] || base64}[/PDF_BASE64]\nFile: ${file.name}\nType: ${file.type}`);
+                };
+                reader.onerror = () => resolve('Error reading PDF file');
                 reader.readAsDataURL(file);
             } else {
                 reader.onload = (e) => {

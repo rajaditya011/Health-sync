@@ -1,0 +1,257 @@
+==== PPT ====
+--- Slide 1 ---
+
+
+
+TITLE PAGE
+SMART INDIA HACKATHON 2026
+
+Problem Statement ID –
+Problem Statement Title-
+Theme-
+PS Category: Software/Hardware
+Team ID-
+Team Name:
+Team Leader Name :
+Team Leader USN Number:
+School of Engineering, Dayananda Sagar University, Bengaluru - 562112.
+
+--- Slide 2 ---
+
+IDEA TITLE
+Proposed Solution (Describe your Idea/Solution/Prototype)
+
+
+Detailed explanation of the proposed solution
+ How it addresses the problem
+Innovation and uniqueness of the solution 
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 3 ---
+
+TECHNICAL APPROACH
+Technologies to be used (e.g. programming languages, frameworks, hardware)
+Methodology and process for implementation (Flow Charts/Images/ working prototype)
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 4 ---
+
+FEASIBILITY AND VIABILITY
+Analysis of the feasibility of the idea
+Potential challenges and risks
+Strategies for overcoming these challenges
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 5 ---
+
+IMPLEMENTATION WORKFLOW
+Define the architecture and technology stack.
+Flowchart as a visual representation starting from the input to output. 
+Highlight your uniqueness if any.
+
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 6 ---
+
+IMPACT AND BENEFITS
+Potential impact on the target audience
+Benefits of the solution (social, economic, environmental, etc.)
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 7 ---
+
+RESEARCH  AND REFERENCES
+Details / Links of the reference and research work
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+Your Team Name
+
+--- Slide 8 ---
+
+Idea Submission – SIH (Internal Hackathon) 2026 - Dayananda Sagar University
+
+Kindly keep the maximum slides limit up to six (6). ( Including the title slide) 
+Try to avoid paragraphs and post your idea in points /diagrams / Infographics /pictures 
+Keep your explanation precise and easy to understand
+Idea should be unique and novel. 
+You can only use provided template for making the PPT without changing the idea details pointers (mentioned in previous slides).
+You need to save the file in PDF. No PPT, Word Doc or any other format will be supported.
+
+Note – Team will be given 5 Minutes to Present and Viva will be taken – Jury panel Evaluation is final and it in not subject to Change. – Selected List of the First round will be Announced in 3 days after Completion. 
+
+IMPORTANT INSTRUCTIONS
+Please ensure below pointers are met while submitting the Idea PPT:
+
+==== PDF ====
+--- Page 1 ---
+Team members: -
+1.Priyanshu Shaurya -ENG25CS0665
+2.Ankit Kumar -ENG25CS0396
+3.Aditya Raj -ENG25AD0083
+
+--- Page 2 ---
+The Problem!
+•Medical reports are complex and hard to interpret
+•Patients struggle to find the right  specialist quickly
+•Medication non -adherence causes serious health risks
+•No integrated system for:
+oConsultation
+oMedication
+oRecovery planning
+Result: Delayed recovery, stress, and preventable complications
+
+--- Page 3 ---
+Our Vision
+To build an AI -assisted healthcare system that simplifies the entire recovery 
+journey while keeping doctors in control.
+Not replacing doctors — empowering patients & clinicians
+
+--- Page 4 ---
+Solution Overview
+HealthSync  is an AI -powered healthcare assistant that:
+•Scans medical reports using OCR
+•Analyzes conditions using AI
+•Recommends the most suitable doctor
+•Enables secure online consultation
+•Records & transcribes conversations (with consent)
+•Extracts prescriptions intelligently
+•Sends medication reminders
+•Creates personalized recovery, diet & exercise plans
+One platform. End -to-end care.
+
+--- Page 5 ---
+Key Features
+•
+  Medical Report Scanner (OCR + AI)
+•
+  AI Doctor Recommendation Engine
+•
+  Consent -Based Consultation Recording
+•
+  Smart Prescription Extraction
+•
+  Dose & Reminder System
+•
+  AI-Generated Diet & Exercise Plans
+•
+  Health Risk Score & Progress Tracking
+•
+  Privacy -First Architecture
+
+--- Page 6 ---
+System Architecture
+Flow Explanation:
+•OCR extracts medical data
+•NLP identifies condition & severity
+•Recommendation engine ranks doctors
+•Speech -to-text transcribes consultation
+•NLP extracts prescriptions
+•Doctor validates AI suggestions
+•Reminder & recovery engines activate
+
+--- Page 7 ---
+Feasibility & Safety Design
+ Doctor approval before medicine ordering
+ 
+ Manual confirmation for sensitive actions
+ 
+ MVP scope fits 24 -hour hackathon
+ 
+ Modular & cloud -based architecture
+ Built for real -world deployment
+
+--- Page 8 ---
+Ethical & Compliance Measures
+•Explicit user consent before recording
+•End-to-end encrypted medical data
+•No AI -generated diagnosis without doctor validation
+•Transparent explainable AI recommendations
+•HIPAA / GDPR -ready design
+ Ethics -first healthcare innovation
+
+--- Page 9 ---
+Innovation Highlights
+What Makes HealthSync  Unique:
+•Autonomous yet doctor -controlled healthcare
+•AI Health Risk Score
+•Predictive recovery planning
+•Integrated lifestyle management
+•Zero patient confusion
+“Healthcare that works silently in the background.”
+
+--- Page 10 ---
+Scalability & Future Growth
+•Wearable device integration
+•Emergency SOS alerts
+•Mental health support
+•Insurance claim automation
+•Multilingual & global expansion
+Designed for millions of users
+
+--- Page 11 ---
+Social & Business Impact
+Social Impact: -
+•Improves medication adherence
+•Reduces healthcare stress
+•Supports elderly & chronic patients
+Business Impact: -
+•Subscription model
+•Pharmacy partnerships
+•Corporate healthcare solutions
+Better health, lower costs
+
+--- Page 12 ---
+Wearable Integration (Future 
+Enhancement)
+Smartwatch & Fitness Band Integration
+In future versions, HealthSync  will integrate with wearable devices to continuously 
+monitor health data.
+Parameters monitored:
+•Heart rate
+•Sleep patterns
+•Daily activity & steps
+•Oxygen levels (if supported)
+How it helps:
+•More accurate recovery suggestions
+•Personalized diet & exercise plans
+•Early warning of potential health issues
+Real-time monitoring enables smarter, personalized healthcare.
+
+--- Page 13 ---
+AI-Based Preventive Healthcare
+From Treatment to Prevention
+Using wearable data and medical history, the 
+app will:
+•Generate a Daily Health Score
+•Detect fatigue or irregular patterns
+•Suggest lifestyle improvements
+•Provide early health alerts
+Impact:
+•Prevent diseases before they become serious
+•Encourage healthier daily routines
+The goal is not only to treat illness but to prevent it.
+
+--- Page 14 ---
+ASAP Emergency Health Support
+Rapid Emergency Response System
+The system will detect or allow:
+•Abnormal health readings
+•Sudden health risk alerts
+•Manual SOS button
+Actions taken instantly:
+•Notify family or emergency contacts
+•Share live location
+•Provide medical summary for faster treatment
+•Suggest nearest hospitals
+Impact:
+•Faster response time
+•Potential life -saving intervention
+Immediate assistance when every second matters.
+
+--- Page 15 ---
+Thank You
+

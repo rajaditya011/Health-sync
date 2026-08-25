@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const [activeTheme, setActiveTheme] = useState(user?.theme || 'light');
     const [activeLang, setActiveLang] = useState<LangCode>((user?.language as LangCode) || 'en');
     const [editMode, setEditMode] = useState(false);
-    const [editForm, setEditForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '' });
+    const [editForm, setEditForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', avatar: user?.avatar || '' });
 
     const handleThemeChange = (theme: string) => {
         setActiveTheme(theme);
@@ -97,12 +97,37 @@ export default function SettingsPage() {
                     <h3 style={{ fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <User size={18} /> Profile
                     </h3>
-                    <button onClick={() => setEditMode(!editMode)} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 13 }}>
+                    <button onClick={() => {
+                        if (editMode) {
+                            setEditForm({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', avatar: user?.avatar || '' });
+                        }
+                        setEditMode(!editMode);
+                    }} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 13 }}>
                         {editMode ? 'Cancel' : 'Edit'}
                     </button>
                 </div>
                 {editMode ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--bg-secondary)', overflow: 'hidden', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {editForm.avatar ? (
+                                    <img src={editForm.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <User size={24} color="var(--text-muted)" />
+                                )}
+                            </div>
+                            <label className="btn-secondary hover-lift" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: 13, borderRadius: 8, display: 'inline-flex', alignItems: 'center' }}>
+                                Change Photo
+                                <input type="file" accept="image/*" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => setEditForm(p => ({ ...p, avatar: reader.result as string }));
+                                        reader.readAsDataURL(file);
+                                    }
+                                }} style={{ display: 'none' }} />
+                            </label>
+                        </div>
                         <div>
                             <label style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Name</label>
                             <input className="input-field" value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} />

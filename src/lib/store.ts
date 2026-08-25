@@ -15,9 +15,11 @@ export interface UserProfile {
     healthGoals: string[];
     language: string;
     theme: string;
+    location?: string;
     intent: 'diagnosed' | 'undiagnosed' | 'wellness' | '';
     onboardingComplete: boolean;
     createdAt: string;
+    avatar?: string;
 }
 
 export interface DoctorAccount {
@@ -61,6 +63,25 @@ export interface HealthJourney {
     aiSummary: string;
     verified: boolean;
 }
+
+export interface ClinicalIntakeSummary {
+    id: string;
+    userId: string;
+    date: string;
+    consultationType: 'Allopathic' | 'AYUSH';
+    chiefComplaint: string;
+    hpi: string;
+    pastMedicalHistory: string;
+    drugAllergyHistory: string;
+    reviewOfSystems: string;
+    prakriti?: string;
+    vikriti?: string;
+    agni?: string;
+    aharaVihara?: string;
+    familyHistory?: string;
+    redFlags: string[];
+}
+
 
 export interface TimelineStep {
     id: string;
@@ -399,12 +420,25 @@ export function getPatientData(userId: string, doctorId?: string) {
         journeys: getStorage(`hs_journeys_${userId}`) || [],
         chatHistory: getStorage(`hs_chat_${userId}`) || [],
         prescriptions: getPatientPrescriptions(userId),
+        intakeSummaries: getIntakeSummaries(userId),
     };
 }
 
 // ---------- Generate unique IDs ----------
 export const generateId = () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// ---------- Intake Summaries ----------
+export const saveIntakeSummary = (summary: ClinicalIntakeSummary) => {
+    const key = `hs_intake_${summary.userId}`;
+    const all: ClinicalIntakeSummary[] = getStorage(key) || [];
+    all.push(summary);
+    setStorage(key, all);
+};
+
+export const getIntakeSummaries = (userId: string): ClinicalIntakeSummary[] => {
+    return getStorage(`hs_intake_${userId}`) || [];
 };
 
 // ---------- Theme ----------

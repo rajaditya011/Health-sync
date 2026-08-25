@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 import {
     getCurrentDoctor, getDoctorAppointments, getDoctorPrescriptions,
-    getCallLogs, getDoctorNotes, type DoctorAccount
+    getCallLogs, getDoctorNotes, type DoctorAccount,
+    getAllUsers, type UserProfile
 } from '@/lib/store';
 
 export default function DoctorDashboard() {
@@ -19,8 +20,10 @@ export default function DoctorDashboard() {
     const [prescriptionCount, setPrescriptionCount] = useState(0);
     const [callCount, setCallCount] = useState(0);
     const [noteCount, setNoteCount] = useState(0);
+    const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
 
     useEffect(() => {
+        setAllUsers(getAllUsers());
         const doc = getCurrentDoctor();
         if (!doc) return;
         setDoctor(doc);
@@ -108,8 +111,12 @@ export default function DoctorDashboard() {
                             onClick={() => router.push(`/doctor-dashboard/patients?id=${apt.userId}`)}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
-                                        {apt.patientName?.charAt(0) || 'P'}
+                                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, overflow: 'hidden' }}>
+                                        {allUsers.find(u => u.id === apt.userId)?.avatar ? (
+                                            <img src={allUsers.find(u => u.id === apt.userId)!.avatar} alt={apt.patientName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            apt.patientName?.charAt(0) || 'P'
+                                        )}
                                     </div>
                                     <div>
                                         <div style={{ fontWeight: 600, fontSize: 14 }}>{apt.patientName}</div>
@@ -136,8 +143,12 @@ export default function DoctorDashboard() {
                                 onClick={() => router.push(`/doctor-dashboard/patients?id=${apt.userId}`)}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
-                                            {apt.patientName?.charAt(0) || 'P'}
+                                        <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14, overflow: 'hidden' }}>
+                                            {allUsers.find(u => u.id === apt.userId)?.avatar ? (
+                                                <img src={allUsers.find(u => u.id === apt.userId)!.avatar} alt={apt.patientName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                apt.patientName?.charAt(0) || 'P'
+                                            )}
                                         </div>
                                         <div>
                                             <div style={{ fontWeight: 600, fontSize: 13 }}>{apt.patientName}</div>

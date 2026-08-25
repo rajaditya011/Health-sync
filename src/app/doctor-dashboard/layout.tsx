@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
     Stethoscope, LayoutDashboard, Users, FileText, Phone,
-    ClipboardList, User, Settings, LogOut, Menu, X
+    ClipboardList, User, Settings, LogOut, Menu, X, Mic
 } from 'lucide-react';
 import { getCurrentDoctor, clearCurrentDoctor, setDoctorTheme, getDoctorTheme, type DoctorAccount } from '@/lib/store';
 
@@ -14,6 +14,7 @@ const navItems = [
     { label: 'Prescriptions', href: '/doctor-dashboard/prescriptions', icon: FileText },
     { label: 'Calls', href: '/doctor-dashboard/calls', icon: Phone },
     { label: 'Notes', href: '/doctor-dashboard/notes', icon: ClipboardList },
+    { label: 'Recorder', href: '/doctor-dashboard/recorder', icon: Mic },
     { label: 'Profile', href: '/doctor-dashboard/profile', icon: User },
     { label: 'Settings', href: '/doctor-dashboard/settings', icon: Settings },
 ];
@@ -80,8 +81,12 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
                 {/* Doctor Info & Logout */}
                 <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
-                            {doctor.image || doctor.name.charAt(0)}
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14, overflow: 'hidden' }}>
+                            {doctor.image?.startsWith('data:image') || doctor.image?.startsWith('http') ? (
+                                <img src={doctor.image} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                doctor.image || doctor.name.charAt(0)
+                            )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doctor.name}</div>

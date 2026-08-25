@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Brain, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Stethoscope } from 'lucide-react';
+import { Brain, Mail, Lock, User, Phone, ArrowRight, Eye, EyeOff, Stethoscope, MapPin, Navigation, Camera, CreditCard, X } from 'lucide-react';
 import { setCurrentUser, generateId, registerUser, loginUser, simpleHash, loginDoctor, setCurrentDoctor, type UserProfile } from '@/lib/store';
 
 export default function AuthPage() {
@@ -13,7 +13,96 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
+    const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', location: '', avatar: '' });
+    const [fetchingLocation, setFetchingLocation] = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
+    const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            setMediaStream(stream);
+            setShowCamera(true);
+        } catch (err: any) {
+            console.error("Camera error:", err);
+            setError(err.message || 'Could not access camera. Please allow permissions.');
+        }
+    };
+
+    const capturePhoto = () => {
+        if (videoRef.current) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoRef.current.videoWidth || 640;
+                canvas.height = videoRef.current.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                    setForm({ ...form, avatar: canvas.toDataURL('image/jpeg') });
+                }
+                stopCamera();
+            } catch (err: any) {
+                console.error("Capture error:", err);
+                setError("Failed to capture image.");
+            }
+        }
+    };
+
+    const stopCamera = () => {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            setMediaStream(null);
+        }
+        setShowCamera(false);
+    };
+
+    const handleGetLocation = () => {
+        setFetchingLocation(true);
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser');
+            setFetchingLocation(false);
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setForm(prev => ({ ...prev, location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}` }));
+                setFetchingLocation(false);
+            },
+            () => {
+                setError('Unable to retrieve your location');
+                setFetchingLocation(false);
+            }
+        );
+    };
+
+    const handleABHALogin = () => {
+        setLoading(true);
+        setTimeout(() => {
+            const abhaUser: UserProfile = {
+                id: generateId(),
+                name: 'ABHA User',
+                email: 'abha@healthsync.com',
+                phone: '9876543210',
+                password: simpleHash('abha123'),
+                location: '',
+                age: '30',
+                gender: 'Male',
+                activityLevel: 'Moderate',
+                existingConditions: [],
+                healthGoals: [],
+                language: 'en',
+                theme: 'light',
+                intent: 'wellness',
+                onboardingComplete: true,
+                createdAt: new Date().toISOString(),
+            };
+            registerUser(abhaUser);
+            setCurrentUser(abhaUser);
+            router.push('/dashboard');
+        }, 1500);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -50,6 +139,8 @@ export default function AuthPage() {
                 email: form.email.trim().toLowerCase(),
                 phone: form.phone,
                 password: simpleHash(form.password),
+                location: form.location.trim(),
+                avatar: form.avatar,
                 age: '',
                 gender: '',
                 activityLevel: '',
@@ -179,6 +270,42 @@ export default function AuthPage() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <AnimatePresence mode="wait">
                         {isSignUp && !isDoctor && (
+                            <motion.div key="avatar" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 12, overflow: 'hidden' }}>
+                                <div style={{ position: 'relative', width: 80, height: 80, marginBottom: 12 }}>
+                                    <div style={{
+                                        width: '100%', height: '100%', borderRadius: '50%', background: 'var(--bg-secondary)',
+                                        border: '2px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        overflow: 'hidden'
+                                    }}>
+                                        {form.avatar ? (
+                                            <img src={form.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <User size={24} color="var(--text-muted)" />
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <label className="hover-lift" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-primary)', background: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: 20, border: '1px solid var(--border-color)' }}>
+                                        <Camera size={14} /> Upload
+                                        <input type="file" accept="image/*" onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => setForm({ ...form, avatar: reader.result as string });
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }} style={{ display: 'none' }} />
+                                    </label>
+                                    <button type="button" onClick={startCamera} className="hover-lift" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'white', background: '#3B82F6', padding: '6px 12px', borderRadius: 20, border: 'none' }}>
+                                        <Camera size={14} /> Live Photo
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence mode="wait">
+                        {isSignUp && !isDoctor && (
                             <motion.div key="name" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
                                 <User size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
                                 <input className="input-field" style={{ paddingLeft: 42 }} placeholder="Full Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
@@ -200,6 +327,18 @@ export default function AuthPage() {
                         )}
                     </AnimatePresence>
 
+                    <AnimatePresence mode="wait">
+                        {isSignUp && !isDoctor && (
+                            <motion.div key="location" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
+                                <MapPin size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
+                                <input className="input-field" style={{ paddingLeft: 42, paddingRight: 44 }} type="text" placeholder="Location" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
+                                <button type="button" onClick={handleGetLocation} disabled={fetchingLocation} style={{ position: 'absolute', right: 14, top: 14, background: 'none', border: 'none', color: fetchingLocation ? 'var(--color-primary)' : 'var(--text-muted)', cursor: 'pointer', padding: 2 }} title="Use Current Location">
+                                    <Navigation size={18} />
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     <div style={{ position: 'relative' }}>
                         <Lock size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
                         <input className="input-field" style={{ paddingLeft: 42, paddingRight: 44 }} type={showPassword ? 'text' : 'password'} placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
@@ -217,6 +356,26 @@ export default function AuthPage() {
                             </>
                         )}
                     </button>
+
+                    {!isDoctor && (
+                        <>
+                            <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
+                                <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+                                <span style={{ padding: '0 12px', fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>OR</span>
+                                <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+                            </div>
+
+                            <button type="button" onClick={handleABHALogin} disabled={loading} style={{
+                                width: '100%', padding: '14px 24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                                borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                                color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+                                opacity: loading ? 0.7 : 1
+                            }} className="hover-lift">
+                                <CreditCard size={20} style={{ color: '#10B981' }} />
+                                Continue with ABHA Card
+                            </button>
+                        </>
+                    )}
                 </form>
 
                 {/* Doctor hint */}
@@ -235,6 +394,46 @@ export default function AuthPage() {
                     ABHA Compatible • DPDP Act 2023 Compliant
                 </div>
             </motion.div>
+
+            {/* Camera Modal */}
+            <AnimatePresence>
+                {showCamera && (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 20, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                            style={{
+                                background: 'var(--bg-card)', borderRadius: 24, padding: 24, width: '100%', maxWidth: 400,
+                                position: 'relative', textAlign: 'center', border: '1px solid var(--border-color)',
+                            }}
+                        >
+                            <button onClick={stopCamera} style={{ position: 'absolute', top: 16, right: 16, background: 'var(--bg-secondary)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', zIndex: 10 }}>
+                                <X size={18} />
+                            </button>
+                            
+                            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>Take a Photo</h2>
+                            
+                            <div style={{ width: '100%', borderRadius: 16, overflow: 'hidden', background: '#000', marginBottom: 16, position: 'relative', aspectRatio: '4/3' }}>
+                                <video 
+                                    ref={(el) => {
+                                        if (el && mediaStream && el.srcObject !== mediaStream) {
+                                            el.srcObject = mediaStream;
+                                        }
+                                        videoRef.current = el;
+                                    }} 
+                                    autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                />
+                            </div>
+
+                            <button type="button" onClick={capturePhoto} className="btn-primary" style={{ width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                <Camera size={20} /> Capture Image
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

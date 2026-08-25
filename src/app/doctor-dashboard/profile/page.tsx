@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
     User, Save, Briefcase, GraduationCap, Clock, IndianRupee, Plus, X
 } from 'lucide-react';
-import { getCurrentDoctor, getDoctorProfile, updateDoctorProfile, type DoctorAccount } from '@/lib/store';
+import { getCurrentDoctor, setCurrentDoctor, getDoctorProfile, updateDoctorProfile, type DoctorAccount } from '@/lib/store';
 
 export default function DoctorProfilePage() {
     const [doctor, setDoctor] = useState<DoctorAccount | null>(null);
@@ -40,6 +40,14 @@ export default function DoctorProfilePage() {
     const saveProfile = () => {
         if (!doctor) return;
         updateDoctorProfile(doctor.id, profile);
+        const updatedDoc = {
+            ...doctor,
+            name: (profile.name as string) || doctor.name,
+            specialty: (profile.specialty as string) || doctor.specialty,
+            image: (profile.image as string) || doctor.image
+        };
+        setCurrentDoctor(updatedDoc);
+        setDoctor(updatedDoc);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };
@@ -57,6 +65,26 @@ export default function DoctorProfilePage() {
                     <h3 style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <User size={16} /> Basic Information
                     </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+                        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-secondary)', overflow: 'hidden', border: '1px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                            {profile.image || doctor?.image?.startsWith('data:image') || doctor?.image?.startsWith('http') ? (
+                                <img src={(profile.image as string) || doctor?.image} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <User size={24} />
+                            )}
+                        </div>
+                        <label className="btn-secondary hover-lift" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: 13, borderRadius: 8, display: 'inline-flex', alignItems: 'center' }}>
+                            Upload Photo
+                            <input type="file" accept="image/*" onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => updateField('image', reader.result);
+                                    reader.readAsDataURL(file);
+                                }
+                            }} style={{ display: 'none' }} />
+                        </label>
+                    </div>
                     {[
                         { key: 'name', label: 'Full Name', placeholder: 'Dr. John Doe' },
                         { key: 'email', label: 'Email', placeholder: 'doctor@example.com' },

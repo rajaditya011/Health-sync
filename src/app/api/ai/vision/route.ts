@@ -47,7 +47,7 @@ ${userContext || ''}`;
                 'Authorization': `Bearer ${SAMBANOVA_API_KEY}`,
             },
             body: JSON.stringify({
-                model: 'Llama-4-Maverick-17B-128E-Instruct',
+                model: 'Llama-3.2-90B-Vision-Instruct',
                 messages,
                 max_tokens: 2048,
                 temperature: 0.3,
