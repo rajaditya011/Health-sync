@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Users, Search, Activity, FileText, ChevronLeft, Heart,
-    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar, Bot, ShieldAlert
+    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar, Bot, ShieldAlert, Leaf
 } from 'lucide-react';
 import {
     getCurrentDoctor, getDoctorAppointments, getPatientData,
