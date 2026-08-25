@@ -46,7 +46,7 @@ RULES:
         let finalReportText = reportText;
         if (reportText.includes('[PDF_BASE64]')) {
             try {
-                const base64Match = reportText.match(/\[PDF_BASE64\](.*?)\[\/PDF_BASE64\]/s);
+                const base64Match = reportText.match(/\[PDF_BASE64\]([\s\S]*?)\[\/PDF_BASE64\]/);
                 if (base64Match && base64Match[1]) {
                     const pdfBuffer = Buffer.from(base64Match[1], 'base64');
                     const pdfParse = require('pdf-parse');
