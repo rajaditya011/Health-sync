@@ -67,6 +67,8 @@ export interface HealthJourney {
 export interface ClinicalIntakeSummary {
     id: string;
     userId: string;
+    patientName?: string; // Newly added for ABHA
+    abhaId?: string; // Newly added for ABHA
     date: string;
     consultationType: 'Allopathic' | 'AYUSH';
     chiefComplaint: string;
@@ -80,6 +82,7 @@ export interface ClinicalIntakeSummary {
     aharaVihara?: string;
     familyHistory?: string;
     redFlags: string[];
+    transcript?: string;
 }
 
 
@@ -146,6 +149,7 @@ export interface MedicalReport {
     journeyId?: string;
     sharedWith?: string[]; // doctor IDs this report is shared with
     fileType?: string; // mime type
+    category?: string; // 'prescriptions' | 'laboratory' | 'discharge' | 'imaging' | 'other'
 }
 
 export interface ChatMessage {
@@ -335,6 +339,17 @@ export const setDigitalTwinChat = (messages: ChatMessage[]) => setStorage(userKe
 
 // ---------- Appointments ----------
 export const getAppointments = (): Appointment[] => getStorage(userKey('hs_appointments')) || [];
+
+export const getAllAppointments = (): (Appointment & { patientName: string; patientEmail: string })[] => {
+    const users = getAllUsers();
+    let allApts: (Appointment & { patientName: string; patientEmail: string })[] = [];
+    for (const u of users) {
+        const apts: Appointment[] = getStorage(`hs_appointments_${u.id}`) || [];
+        allApts = allApts.concat(apts.map(a => ({ ...a, patientName: u.name, patientEmail: u.email })));
+    }
+    return allApts.sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
+};
+
 export const addAppointment = (apt: Appointment) => {
     const apts = getAppointments();
     apts.push(apt);
@@ -605,6 +620,44 @@ export const autoShareReportsWithDoctor = (userId: string, doctorId: string) => 
     setStorage(`hs_reports_${userId}`, updated);
 };
 
+export interface ABHARecord {
+    id: string;
+    name: string;
+    age: number;
+    gender: 'Male' | 'Female' | 'Other';
+    bloodGroup: string;
+    lastUpdated: string;
+    medicalHistory: string[];
+    conditions: string[];
+    medications: string[];
+}
+
+export const abhaDatabase: ABHARecord[] = [
+    {
+        id: '91-1234-5678-9012',
+        name: 'Rahul Sharma',
+        age: 45,
+        gender: 'Male',
+        bloodGroup: 'B+',
+        lastUpdated: '2023-10-15T10:30:00Z',
+        medicalHistory: ['Appendectomy (2015)', 'Mild Asthma'],
+        conditions: ['Hypertension'],
+        medications: ['Amlodipine 5mg'],
+    },
+    {
+        id: '91-9876-5432-1098',
+        name: 'Priya Patel',
+        age: 32,
+        gender: 'Female',
+        bloodGroup: 'O+',
+        lastUpdated: '2023-11-20T14:45:00Z',
+        medicalHistory: ['No significant history'],
+        conditions: ['Polycystic Ovary Syndrome (PCOS)'],
+        medications: ['Metformin 500mg'],
+    }
+];
+
+// --- Mock Data Initialization ----------
 // ---------- Notifications ----------
 export const getNotifications = (): Notification[] => getStorage(userKey('hs_notifications')) || [];
 export const addNotification = (notif: Notification) => {
@@ -643,17 +696,69 @@ export const getVisionAnalyses = (): VisionAnalysis[] => getStorage(userKey('hs_
 // ---------- Medicine Orders ----------
 export const getOrders = (): MedicineOrder[] => getStorage(userKey('hs_orders')) || [];
 export const addOrder = (order: MedicineOrder) => {
-    const all = getOrders();
+    const all = getStorage(`${order.userId}_hs_orders`) || [];
     all.push(order);
-    setStorage(userKey('hs_orders'), all);
+    setStorage(`${order.userId}_hs_orders`, all);
 };
-export const updateOrderStatus = (id: string, status: MedicineOrder['status']) => {
-    const all = getOrders().map(o => o.id === id ? { ...o, status } : o);
-    setStorage(userKey('hs_orders'), all);
+export const updateOrderStatus = (id: string, userId: string, status: MedicineOrder['status']) => {
+    const key = `${userId}_hs_orders`;
+    const all: MedicineOrder[] = getStorage(key) || [];
+    const updated = all.map(o => o.id === id ? { ...o, status } : o);
+    setStorage(key, updated);
+};
+export const getAllOrders = (): MedicineOrder[] => {
+    const users = getAllUsers();
+    let allOrders: MedicineOrder[] = [];
+    for (const u of users) {
+        const orders = getStorage(`${u.id}_hs_orders`) || [];
+        allOrders = allOrders.concat(orders);
+    }
+    // Sort by orderDate descending
+    return allOrders.sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
 };
 export const generateTransactionId = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let txn = 'TXN';
     for (let i = 0; i < 12; i++) txn += chars.charAt(Math.floor(Math.random() * chars.length));
     return txn;
+};
+// ----------------------------------------------------
+// Emergency Requests
+// ----------------------------------------------------
+
+export interface EmergencyRequest {
+    id: string;
+    type: 'blood' | 'bed' | 'machine';
+    status: 'Pending' | 'Processing' | 'Completed' | 'Dispatched' | 'Admitted';
+    time: string;
+    
+    // For Blood
+    bloodType?: string;
+    location?: string;
+    
+    // For Bed
+    ward?: string;
+    patientName?: string;
+    
+    // For Machine
+    machine?: string;
+}
+
+export const getEmergencyRequests = (): EmergencyRequest[] => {
+    return getStorage('healthsync_emergency_requests') || [];
+};
+
+export const addEmergencyRequest = (req: EmergencyRequest) => {
+    const all = getEmergencyRequests();
+    all.unshift(req);
+    setStorage('healthsync_emergency_requests', all);
+};
+
+export const updateEmergencyRequestStatus = (id: string, status: EmergencyRequest['status']) => {
+    const all = getEmergencyRequests();
+    const idx = all.findIndex(r => r.id === id);
+    if (idx !== -1) {
+        all[idx].status = status;
+        setStorage('healthsync_emergency_requests', all);
+    }
 };

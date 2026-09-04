@@ -441,7 +441,7 @@ You can:
 5. Give immediate care tips
 6. Reference the user's medical reports, vitals, and active prescriptions when relevant
 
-Be empathetic, clear, and structured. Use markdown headers for sections.
+Be empathetic and clear. Return your response as a single, concise paragraph of plain text. DO NOT use markdown, headers, tables, bullet points, asterisks, or any special characters.
 If the user describes severe symptoms (chest pain, difficulty breathing, etc.), immediately recommend emergency care.`,
                         userContext: formatContextForAI(buildAIContext()),
                     }),

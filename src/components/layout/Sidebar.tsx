@@ -8,21 +8,20 @@ import { useLanguage } from '@/lib/LanguageProvider';
 import {
     LayoutDashboard, Brain, HeartPulse, FileText, Pill,
     Stethoscope, Users, Settings, Phone, LogOut, Menu,
-    Activity, ClipboardList, Bell
+    Activity, ClipboardList, Bell, ShieldAlert, Monitor
 } from 'lucide-react';
 
 const navItems = [
     { href: '/dashboard', tKey: 'nav.dashboard', icon: LayoutDashboard },
     { href: '/digital-twin', tKey: 'nav.digitalTwin', icon: Brain },
+    { href: '/kiosk', tKey: 'Medi Kiosk', icon: Monitor },
     { href: '/vitals', tKey: 'nav.vitals', icon: HeartPulse },
     { href: '/reports', tKey: 'nav.reports', icon: FileText },
     { href: '/recovery', tKey: 'nav.recovery', icon: Activity },
-    { href: '/doctors', tKey: 'nav.doctors', icon: Stethoscope },
     { href: '/prescriptions', tKey: 'nav.prescriptions', icon: ClipboardList },
+    { href: '/medicines', tKey: 'Medicines', icon: Pill },
+    { href: '/doctors', tKey: 'Doctors', icon: Stethoscope },
     { href: '/calls', tKey: 'nav.calls', icon: Phone },
-    { href: '/recovery-circle', tKey: 'nav.recoveryCircle', icon: Users },
-    { href: '/medicines', tKey: 'nav.medicines', icon: Pill },
-    { href: '/notifications', tKey: 'nav.notifications', icon: Bell, showBadge: true },
     { href: '/settings', tKey: 'nav.settings', icon: Settings },
 ];
 
@@ -144,8 +143,8 @@ export default function Sidebar() {
                                 style={{ justifyContent: collapsed ? 'center' : 'flex-start', padding: collapsed ? '12px' : '12px 16px', position: 'relative' }}
                                 onClick={() => setMobileOpen(false)}
                             >
-                                <Icon size={18} style={{ flexShrink: 0 }} />
-                                {!collapsed && <span>{t(item.tKey)}</span>}
+                                <Icon size={32} style={{ flexShrink: 0, color: 'var(--color-primary)' }} />
+                                {!collapsed && <span style={{ fontSize: 16, fontWeight: 600 }}>{t(item.tKey) === item.tKey ? item.tKey : t(item.tKey)}</span>}
                                 {badge > 0 && (
                                     <span style={{
                                         position: 'absolute', top: 6, right: collapsed ? 6 : 10,

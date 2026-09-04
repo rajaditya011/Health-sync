@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const [activeTheme, setActiveTheme] = useState(user?.theme || 'light');
     const [activeLang, setActiveLang] = useState<LangCode>((user?.language as LangCode) || 'en');
     const [editMode, setEditMode] = useState(false);
-    const [editForm, setEditForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', avatar: user?.avatar || '' });
+    const [editForm, setEditForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', age: user?.age || '', avatar: user?.avatar || '' });
 
     const handleThemeChange = (theme: string) => {
         setActiveTheme(theme);
@@ -99,7 +99,7 @@ export default function SettingsPage() {
                     </h3>
                     <button onClick={() => {
                         if (editMode) {
-                            setEditForm({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', avatar: user?.avatar || '' });
+                            setEditForm({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', age: user?.age || '', avatar: user?.avatar || '' });
                         }
                         setEditMode(!editMode);
                     }} className="btn-secondary" style={{ padding: '6px 14px', fontSize: 13 }}>
@@ -140,6 +140,10 @@ export default function SettingsPage() {
                             <label style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Phone</label>
                             <input className="input-field" value={editForm.phone} onChange={e => setEditForm(p => ({ ...p, phone: e.target.value }))} />
                         </div>
+                        <div>
+                            <label style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Age</label>
+                            <input type="number" className="input-field" value={editForm.age} onChange={e => setEditForm(p => ({ ...p, age: e.target.value }))} />
+                        </div>
                         <button className="btn-primary" onClick={handleProfileSave}>Save Changes</button>
                     </div>
                 ) : (
@@ -148,6 +152,7 @@ export default function SettingsPage() {
                             { label: 'Name', value: user?.name },
                             { label: 'Email', value: user?.email },
                             { label: 'Phone', value: user?.phone || 'Not set' },
+                            { label: 'Age', value: user?.age || 'Not set' },
                             { label: 'Intent', value: user?.intent || 'Not set' },
                         ].map(item => (
                             <div key={item.label} style={{

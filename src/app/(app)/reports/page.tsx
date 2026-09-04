@@ -31,7 +31,16 @@ export default function ReportsPage() {
     const [dragOver, setDragOver] = useState(false);
     const [showCreateJourney, setShowCreateJourney] = useState(false);
     const [creatingJourney, setCreatingJourney] = useState(false);
+    const [activeCategory, setActiveCategory] = useState<string>('prescriptions');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const CATEGORIES = [
+        { id: 'prescriptions', label: 'Prescriptions' },
+        { id: 'laboratory', label: 'Laboratory Report' },
+        { id: 'discharge', label: 'Discharge Summary' },
+        { id: 'imaging', label: 'Imaging Files' },
+        { id: 'other', label: 'Other' },
+    ];
 
     useEffect(() => {
         setReportsList(getReports());
@@ -104,6 +113,7 @@ export default function ReportsPage() {
                     recommendations: data.analysis.recommendations || [],
                     urgencyLevel: data.analysis.urgencyLevel || 'green',
                     fileType: file.type,
+                    category: activeCategory,
                     sharedWith: [],
                 };
                 addReport(report);
@@ -240,11 +250,38 @@ Include 6-10 timeline steps. Focus on Indian dietary preferences. Only valid JSO
         red: { bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.2)', text: '#EF4444', label: 'Urgent' },
     };
 
+    const filteredReports = reports.filter(r => (r.category || 'other') === activeCategory);
+
     return (
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ marginBottom: 24 }}>
                 <h1 style={{ fontSize: 28, fontWeight: 800 }}>{t('reports.title')}</h1>
                 <p style={{ color: 'var(--text-secondary)', marginTop: 4 }}>Upload reports for AI-powered analysis and personalized insights</p>
+            </div>
+
+            {/* Category Tabs */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, overflowX: 'auto', paddingBottom: 8, flexWrap: 'wrap' }}>
+                {CATEGORIES.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        style={{
+                            padding: '8px 18px',
+                            borderRadius: 20,
+                            border: '1px solid',
+                            borderColor: activeCategory === cat.id ? 'var(--color-primary)' : 'var(--glass-border)',
+                            background: activeCategory === cat.id ? 'var(--color-primary)' : 'var(--bg-card)',
+                            color: activeCategory === cat.id ? 'white' : 'var(--text-primary)',
+                            fontWeight: activeCategory === cat.id ? 600 : 400,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s ease',
+                            fontSize: 14,
+                        }}
+                    >
+                        {cat.label}
+                    </button>
+                ))}
             </div>
 
             {/* Upload Area */}
@@ -413,11 +450,11 @@ Include 6-10 timeline steps. Focus on Indian dietary preferences. Only valid JSO
             </AnimatePresence>
 
             {/* Previous Reports */}
-            {reports.length > 0 && !analysis && (
+            {filteredReports.length > 0 && !analysis && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={18} style={{ color: 'var(--color-primary)' }} /> Your Reports</h2>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={18} style={{ color: 'var(--color-primary)' }} /> Your {CATEGORIES.find(c => c.id === activeCategory)?.label}</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {reports.map((report, i) => (
+                        {filteredReports.map((report, i) => (
                             <div key={report.id} className="glass-card" style={{ padding: 18 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => viewReport(report)}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -489,10 +526,10 @@ Include 6-10 timeline steps. Focus on Indian dietary preferences. Only valid JSO
             )}
 
             {/* Empty State */}
-            {reports.length === 0 && !analysis && !analyzing && (
+            {filteredReports.length === 0 && !analysis && !analyzing && (
                 <div className="glass-card-static" style={{ padding: 40, textAlign: 'center' }}>
                     <FileText size={48} style={{ color: 'var(--color-primary)', marginBottom: 16, opacity: 0.5 }} />
-                    <h3 style={{ fontWeight: 700, marginBottom: 8 }}>No Reports Yet</h3>
+                    <h3 style={{ fontWeight: 700, marginBottom: 8 }}>No {CATEGORIES.find(c => c.id === activeCategory)?.label}</h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                         Upload your first medical report to get AI-powered analysis, recommendations, and a personalized recovery plan.
                     </p>

@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
     Stethoscope, LayoutDashboard, Users, FileText, Phone,
-    ClipboardList, User, Settings, LogOut, Menu, X, Mic
+    ClipboardList, User, Settings, LogOut, Menu, X, Mic, Database
 } from 'lucide-react';
 import { getCurrentDoctor, clearCurrentDoctor, setDoctorTheme, getDoctorTheme, type DoctorAccount } from '@/lib/store';
 
 const navItems = [
     { label: 'Dashboard', href: '/doctor-dashboard', icon: LayoutDashboard },
     { label: 'My Patients', href: '/doctor-dashboard/patients', icon: Users },
+    { label: 'ABHA Registry', href: '/doctor-dashboard/abha', icon: Database },
     { label: 'Prescriptions', href: '/doctor-dashboard/prescriptions', icon: FileText },
     { label: 'Calls', href: '/doctor-dashboard/calls', icon: Phone },
     { label: 'Notes', href: '/doctor-dashboard/notes', icon: ClipboardList },

@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const GROQ_KEYS = [
-    process.env.GROQ_API_KEY_2 || '', // Use Agent 2 for report analysis
+    process.env.GROQ_API_KEY_2 || '',
     process.env.GROQ_API_KEY_1 || '',
 ];
+const SAMBANOVA_API_KEY = process.env.SAMBANOVA_API_KEY || 'fbd09331-203a-486d-a5e9-ccaf9edbad9b';
 
 export async function POST(request: NextRequest) {
     try {
         const { reportText, fileName, userContext } = await request.json();
 
-        const systemPrompt = `You are HealthSync's Medical Report Analyzer (Agent 2). Analyze the given medical report text content.
+        const systemPrompt = `You are HealthSync's Medical Report Analyzer (Agent 2). Analyze the given medical report.
 
 ${userContext ? `PATIENT CONTEXT:\n${userContext}\n` : ''}
 
@@ -33,7 +34,6 @@ CRITICAL: FAKE REPORT DETECTION
 - If the content does NOT look like a genuine medical report (random text, gibberish, lorem ipsum, jokes, non-medical content, test data, or obviously fabricated values), set "isFake": true
 - When isFake is true, set laymanSummary to "This does not appear to be a genuine medical report. Please upload a real medical report for analysis."
 - When isFake is true, set urgencyLevel to "red" and leave abnormalities/recommendations empty
-- If the content contains image data markers [IMAGE_BASE64], analyze it as a scanned medical report image
 
 RULES:
 - NEVER diagnose. Use phrases like "these results may suggest" or "your doctor should evaluate"
@@ -44,6 +44,9 @@ RULES:
 - If the text seems incomplete or unclear, do your best and note limitations`;
 
         let finalReportText = reportText;
+        let base64Image = '';
+
+        // Extract PDF Base64
         if (reportText.includes('[PDF_BASE64]')) {
             try {
                 const base64Match = reportText.match(/\[PDF_BASE64\]([\s\S]*?)\[\/PDF_BASE64\]/);
@@ -57,9 +60,35 @@ RULES:
                 console.error("PDF Parsing error:", e);
                 finalReportText = "Failed to extract text from PDF report.";
             }
+        } 
+        // Extract Image Base64
+        else if (reportText.includes('[IMAGE_BASE64]') || reportText.includes('[BASE64]')) {
+            const match = reportText.match(/\[(?:IMAGE_BASE64|BASE64)\]([\s\S]*?)\[\/(?:IMAGE_BASE64|BASE64)\]/);
+            if (match && match[1]) {
+                base64Image = `data:image/jpeg;base64,${match[1]}`;
+            }
+        }
+
+        if (base64Image) {
+            try {
+                const Tesseract = require('tesseract.js');
+                const result = await Tesseract.recognize(base64Image, 'eng');
+                finalReportText = `File: ${fileName}\nImage OCR Content:\n${result.data.text}`;
+            } catch (e) {
+                console.error("OCR error:", e);
+                finalReportText = "Failed to extract text from image.";
+            }
+        }
+
+        // Limit length to avoid exceeding context window
+        if (finalReportText && finalReportText.length > 15000) {
+            finalReportText = finalReportText.substring(0, 15000) + '...[TRUNCATED]';
         }
 
         let data;
+        let text = '';
+
+        // Route to Groq for all (text/pdf/image)
         for (let i = 0; i < GROQ_KEYS.length; i++) {
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
@@ -74,7 +103,7 @@ RULES:
                         { role: 'user', content: `Analyze this medical report. File: ${fileName}.\n\nReport Content:\n${finalReportText}\n\nProvide structured analysis in JSON format.` },
                     ],
                     temperature: 0.3,
-                    max_completion_tokens: 4096,
+                    max_completion_tokens: 2048,
                 }),
             });
 
@@ -85,8 +114,7 @@ RULES:
         if (data.error) {
             return NextResponse.json({ error: data.error.message }, { status: 500 });
         }
-
-        const text = data.choices?.[0]?.message?.content || '';
+        text = data.choices?.[0]?.message?.content || '';
 
         let analysis;
         try {

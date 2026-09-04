@@ -9,48 +9,13 @@ import {
     Hospital, Search, Dumbbell, ChartLine, Pill, Monitor, Salad
 } from 'lucide-react';
 import { getCurrentUser, setCurrentUser, type UserProfile } from '@/lib/store';
+import { useLanguage } from '@/lib/LanguageProvider';
+import { LangCode } from '@/lib/translations';
 
 const ONBOARDING_STEPS = [
     {
-        id: 'intent',
-        question: "Welcome to HealthSync! I'm your AI health companion. How can I help you today?",
-        options: [
-            { value: 'diagnosed', label: 'I have a diagnosed condition', Icon: Hospital, desc: 'Track recovery & manage treatment' },
-            { value: 'undiagnosed', label: 'I need help understanding symptoms', Icon: Search, desc: 'Find the right specialist' },
-            { value: 'wellness', label: 'I want to improve my overall health', Icon: Dumbbell, desc: 'Prevention & wellness tracking' },
-        ],
-    },
-    {
-        id: 'conditions',
-        question: "Could you tell me about any health conditions or symptoms you're currently dealing with? This helps me personalize your experience.",
-        textInput: true,
-        placeholder: 'e.g., Diabetes, Kidney Stones, Back Pain, or describe your symptoms...',
-    },
-    {
-        id: 'profile',
-        question: "Great! Let me get to know you better. This helps me personalize your experience.",
-        fields: [
-            { key: 'age', label: 'Age Range', options: ['18-25', '26-35', '36-45', '46-55', '55+'] },
-            { key: 'gender', label: 'Gender (Optional)', options: ['Male', 'Female', 'Non-binary', 'Prefer not to say'] },
-            { key: 'activityLevel', label: 'Activity Level', options: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'] },
-        ],
-    },
-    {
-        id: 'goals',
-        question: "What would you like to focus on? You can choose multiple goals.",
-        multiSelect: true,
-        options: [
-            { value: 'recovery', label: 'Recovery Tracking', Icon: ChartLine },
-            { value: 'medication', label: 'Medication Management', Icon: Pill },
-            { value: 'lifestyle', label: 'Lifestyle Improvement', Icon: Dumbbell },
-            { value: 'doctor', label: 'Doctor Guidance', Icon: Stethoscope },
-            { value: 'nutrition', label: 'Nutrition & Diet', Icon: Salad },
-            { value: 'mental', label: 'Mental Wellness', Icon: Brain },
-        ],
-    },
-    {
         id: 'language',
-        question: "Which language do you prefer? The entire app will adapt to your choice.",
+        tKey: 'ob.langQ',
         options: [
             { value: 'en', label: 'English', desc: 'EN' },
             { value: 'hi', label: 'हिंदी (Hindi)', desc: 'HI' },
@@ -59,8 +24,45 @@ const ONBOARDING_STEPS = [
         ],
     },
     {
+        id: 'intent',
+        tKey: 'ob.intentQ',
+        options: [
+            { value: 'diagnosed', tKey: 'ob.opt.diagnosed', Icon: Hospital },
+            { value: 'undiagnosed', tKey: 'ob.opt.undiagnosed', Icon: Search },
+            { value: 'wellness', tKey: 'ob.opt.wellness', Icon: Dumbbell },
+        ],
+    },
+    {
+        id: 'conditions',
+        tKey: 'ob.condQ',
+        textInput: true,
+        placeholder: 'e.g., Diabetes, Kidney Stones, Back Pain, or describe your symptoms...',
+    },
+    {
+        id: 'profile',
+        tKey: 'ob.profQ',
+        fields: [
+            { key: 'age', label: 'Age Range', options: ['18-25', '26-35', '36-45', '46-55', '55+'] },
+            { key: 'gender', label: 'Gender (Optional)', options: ['Male', 'Female', 'Non-binary', 'Prefer not to say'] },
+            { key: 'activityLevel', label: 'Activity Level', options: ['Sedentary', 'Lightly Active', 'Moderately Active', 'Very Active'] },
+        ],
+    },
+    {
+        id: 'goals',
+        tKey: 'ob.goalsQ',
+        multiSelect: true,
+        options: [
+            { value: 'recovery', tKey: 'ob.opt.recovery', Icon: ChartLine },
+            { value: 'medication', tKey: 'ob.opt.medication', Icon: Pill },
+            { value: 'lifestyle', tKey: 'ob.opt.lifestyle', Icon: Dumbbell },
+            { value: 'doctor', tKey: 'ob.opt.doctor', Icon: Stethoscope },
+            { value: 'nutrition', tKey: 'ob.opt.nutrition', Icon: Salad },
+            { value: 'mental', tKey: 'ob.opt.mental', Icon: Brain },
+        ],
+    },
+    {
         id: 'theme',
-        question: "Almost done! Choose a visual theme that feels comfortable for you.",
+        tKey: 'ob.themeQ',
         options: [
             { value: 'light', label: 'Light Mode', Icon: Sun, desc: 'Clean & bright' },
             { value: 'dark', label: 'Dark Mode', Icon: Moon, desc: 'Easy on the eyes' },
@@ -74,8 +76,8 @@ const ONBOARDING_STEPS = [
 
 interface OnboardingStep {
     id: string;
-    question: string;
-    options?: Array<{ value: string; label: string; Icon?: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; desc?: string }>;
+    tKey: string;
+    options?: Array<{ value: string; label?: string; tKey?: string; Icon?: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; desc?: string }>;
     fields?: Array<{ key: string; label: string; options: string[] }>;
     multiSelect?: boolean;
     textInput?: boolean;
@@ -97,15 +99,16 @@ export default function OnboardingPage() {
     const [progress, setProgress] = useState(0);
 
     const initializedRef = useRef(false);
+    const { t, setLang } = useLanguage();
 
     useEffect(() => {
         if (initializedRef.current) return;
         initializedRef.current = true;
         setTimeout(() => {
-            addAIMessage(ONBOARDING_STEPS[0].question);
+            addAIMessage(t(ONBOARDING_STEPS[0].tKey));
         }, 400);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -140,6 +143,7 @@ export default function OnboardingPage() {
                 break;
             case 'language':
                 newData.language = value;
+                setLang(value as LangCode);
                 break;
             case 'theme':
                 newData.theme = value;
@@ -152,7 +156,12 @@ export default function OnboardingPage() {
         if (step < ONBOARDING_STEPS.length - 1) {
             const nextStep = step + 1;
             setStep(nextStep);
-            setTimeout(() => addAIMessage(ONBOARDING_STEPS[nextStep].question), 200);
+            
+            // Re-fetch translation manually from translation dictionary for the next step 
+            // because `t` inside this callback might be stale or take a render to update
+            import('@/lib/translations').then(({ t: manualT }) => {
+                setTimeout(() => addAIMessage(manualT(ONBOARDING_STEPS[nextStep].tKey, newData.language as LangCode || 'en')), 200);
+            });
         } else {
             setOnboardingDone(true);
             setStep(ONBOARDING_STEPS.length);
@@ -172,7 +181,7 @@ export default function OnboardingPage() {
 
         const nextStep = step + 1;
         setStep(nextStep);
-        setTimeout(() => addAIMessage(ONBOARDING_STEPS[nextStep].question), 200);
+        setTimeout(() => addAIMessage(t(ONBOARDING_STEPS[nextStep].tKey)), 200);
     };
 
     const handleProfileSubmit = () => {
@@ -186,7 +195,7 @@ export default function OnboardingPage() {
 
         const nextStep = step + 1;
         setStep(nextStep);
-        setTimeout(() => addAIMessage(ONBOARDING_STEPS[nextStep].question), 200);
+        setTimeout(() => addAIMessage(t(ONBOARDING_STEPS[nextStep].tKey)), 200);
     };
 
     const handleGoalsSubmit = () => {
@@ -201,7 +210,7 @@ export default function OnboardingPage() {
 
         const nextStep = step + 1;
         setStep(nextStep);
-        setTimeout(() => addAIMessage(ONBOARDING_STEPS[nextStep].question), 200);
+        setTimeout(() => addAIMessage(t(ONBOARDING_STEPS[nextStep].tKey)), 200);
     };
 
     const completeOnboarding = (data: Partial<UserProfile>) => {
@@ -328,7 +337,7 @@ export default function OnboardingPage() {
                                         key={opt.value}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleOptionSelect(opt.value, opt.label)}
+                                        onClick={() => handleOptionSelect(opt.value, opt.label || t(opt.tKey!))}
                                         className="glass-card"
                                         style={{
                                             padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14,
@@ -338,7 +347,7 @@ export default function OnboardingPage() {
                                     >
                                         {opt.Icon ? <opt.Icon size={22} style={{ color: 'var(--color-primary)' }} /> : <ArrowRight size={22} style={{ color: 'var(--text-muted)' }} />}
                                         <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 600, fontSize: 15 }}>{opt.label}</div>
+                                            <div style={{ fontWeight: 600, fontSize: 15 }}>{opt.label || t(opt.tKey!)}</div>
                                             {opt.desc && (
                                                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>{opt.desc}</div>
                                             )}
@@ -402,7 +411,7 @@ export default function OnboardingPage() {
                                             }}
                                         >
                                             <span style={{ display: 'block', marginBottom: 6 }}>{opt.Icon ? <opt.Icon size={22} style={{ color: 'var(--color-primary)' }} /> : null}</span>
-                                            <span style={{ fontSize: 13, fontWeight: 600 }}>{opt.label}</span>
+                                            <span style={{ fontSize: 13, fontWeight: 600 }}>{opt.label || t(opt.tKey!)}</span>
                                         </button>
                                     ))}
                                 </div>

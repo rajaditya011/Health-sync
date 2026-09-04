@@ -95,8 +95,9 @@ export default function DashboardPage() {
     const quickActions = [
         { Icon: Upload, label: 'Upload Report', href: '/reports', gradient: 'linear-gradient(135deg, #0EA5E9, #8B5CF6)' },
         { Icon: Stethoscope, label: 'Find Doctor', href: '/doctors', gradient: 'linear-gradient(135deg, #10B981, #0EA5E9)' },
-        { Icon: Brain, label: 'Ask AI', href: '/digital-twin', gradient: 'linear-gradient(135deg, #8B5CF6, #EC4899)' },
-        { Icon: Users, label: 'Family', href: '/family', gradient: 'linear-gradient(135deg, #F59E0B, #EF4444)' },
+        { Icon: Bot, label: 'MediKiosk', href: '/kiosk', gradient: 'linear-gradient(135deg, #8B5CF6, #EC4899)' },
+        { Icon: Droplet, label: 'Request Blood', href: '/blood-bank', gradient: 'linear-gradient(135deg, #EF4444, #B91C1C)' },
+        { Icon: CalendarDays, label: 'Hospital Admission', href: '/hospital', gradient: 'linear-gradient(135deg, #F59E0B, #D97706)' },
     ];
 
     const contextTips = {
@@ -207,10 +208,10 @@ export default function DashboardPage() {
                         <Link key={i} href={action.href} style={{ textDecoration: 'none' }}>
                             <div className="glass-card" style={{ padding: 20, cursor: 'pointer', transition: 'transform 0.2s' }}>
                                 <div style={{
-                                    width: 44, height: 44, borderRadius: 12, background: action.gradient,
+                                    width: 56, height: 56, borderRadius: 12, background: action.gradient,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8,
                                 }}>
-                                    <action.Icon size={22} style={{ color: 'white' }} />
+                                    <action.Icon size={28} style={{ color: 'white' }} />
                                 </div>
                                 <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{action.label}</span>
                             </div>

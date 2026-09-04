@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Users, Search, Activity, FileText, ChevronLeft, Heart,
-    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar, Bot, ShieldAlert, Leaf
+    Thermometer, Droplets, Phone, Plus, ClipboardList, Calendar, Bot, ShieldAlert, Leaf, MessageSquare, Map as MapIcon
 } from 'lucide-react';
 import {
     getCurrentDoctor, getDoctorAppointments, getPatientData,
@@ -72,6 +72,7 @@ export default function PatientsPage() {
 
     // Get unique patients
     const patientMap = new Map<string, { name: string; email: string; userId: string; lastDate: string; avatar?: string }>();
+    // Add users from appointments
     appointments.forEach(a => {
         const u = allUsers.find(u => u.id === a.userId);
         if (!patientMap.has(a.userId) || new Date(a.date) > new Date(patientMap.get(a.userId)!.lastDate)) {
@@ -84,13 +85,29 @@ export default function PatientsPage() {
             });
         }
     });
+
+    // Add all other users in the system (e.g. from Kiosk)
+    allUsers.forEach(u => {
+        if (!patientMap.has(u.id)) {
+            patientMap.set(u.id, {
+                name: u.name || 'Unknown Patient',
+                email: u.email || 'patient@example.com',
+                userId: u.id,
+                lastDate: new Date().toISOString(),
+                avatar: u.avatar
+            });
+        }
+    });
     const patients = Array.from(patientMap.values()).filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.email.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        p.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.userId.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: Activity },
         { id: 'intake', label: 'AI Intake', icon: Bot },
+        { id: 'activity', label: 'Patient Activity', icon: MapIcon },
         { id: 'vitals', label: 'Vitals', icon: Heart },
         { id: 'reports', label: 'Reports', icon: FileText },
         { id: 'notes', label: 'Notes', icon: ClipboardList },
@@ -343,6 +360,17 @@ export default function PatientsPage() {
                                                         </>
                                                     )}
                                                 </div>
+
+                                                {summary.transcript && (
+                                                    <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--border-color)' }}>
+                                                        <h4 style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <MessageSquare size={14} /> Raw Conversation Transcript
+                                                        </h4>
+                                                        <div style={{ background: 'var(--bg-default)', padding: 16, borderRadius: 12, border: '1px solid var(--border-color)', maxHeight: 300, overflowY: 'auto', fontSize: 13, fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                                                            {summary.transcript}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))
                                     )}
@@ -445,6 +473,64 @@ export default function PatientsPage() {
                                             </div>
                                         ))
                                     )}
+                                </div>
+                            )}
+
+                            {activeTab === 'activity' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                    {/* Journeys */}
+                                    <div className="glass-card-static" style={{ padding: 20 }}>
+                                        <h3 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <MapIcon size={18} style={{ color: 'var(--color-primary)' }} /> Health Journeys
+                                        </h3>
+                                        {(!patientData.journeys || patientData.journeys.length === 0) ? (
+                                            <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 20 }}>No active health journeys</p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                {patientData.journeys.map((j: any) => (
+                                                    <div key={j.id} style={{ padding: 16, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                                            <div style={{ fontWeight: 700, fontSize: 15 }}>{j.title}</div>
+                                                            <span style={{
+                                                                padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600, textTransform: 'uppercase',
+                                                                background: j.status === 'active' ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)',
+                                                                color: j.status === 'active' ? '#10B981' : '#64748B'
+                                                            }}>{j.status}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>Condition: {j.condition}</div>
+                                                        <div style={{ height: 6, background: 'var(--border-color)', borderRadius: 3, overflow: 'hidden' }}>
+                                                            <div style={{ height: '100%', background: 'var(--color-primary)', width: `${j.progress}%` }} />
+                                                        </div>
+                                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, textAlign: 'right' }}>{j.progress}% Completed</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Digital Twin Chat */}
+                                    <div className="glass-card-static" style={{ padding: 20 }}>
+                                        <h3 style={{ fontWeight: 700, fontSize: 16, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <MessageSquare size={18} style={{ color: '#8B5CF6' }} /> Recent AI Assistant Chats
+                                        </h3>
+                                        {(!patientData.chatHistory || patientData.chatHistory.length === 0) ? (
+                                            <p style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 20 }}>No chat history available</p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto', paddingRight: 8 }}>
+                                                {patientData.chatHistory.slice(-10).map((msg: any) => (
+                                                    <div key={msg.id} style={{
+                                                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                                        background: msg.role === 'user' ? 'var(--color-primary)' : 'var(--bg-card)',
+                                                        color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
+                                                        border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
+                                                        padding: '10px 14px', borderRadius: 12, maxWidth: '85%', fontSize: 13, lineHeight: 1.5
+                                                    }}>
+                                                        {msg.content}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </>

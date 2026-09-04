@@ -9,11 +9,11 @@ import { setCurrentUser, generateId, registerUser, loginUser, simpleHash, loginD
 export default function AuthPage() {
     const router = useRouter();
     const [isSignUp, setIsSignUp] = useState(true);
-    const [isDoctor, setIsDoctor] = useState(false);
+    const [portalRole, setPortalRole] = useState('patient'); // 'patient', 'doctor', 'admin', 'hospital', 'blood-bank', 'abha'
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', location: '', avatar: '' });
+    const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', location: '', avatar: '', age: '' });
     const [fetchingLocation, setFetchingLocation] = useState(false);
     const [showCamera, setShowCamera] = useState(false);
     const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
@@ -109,21 +109,27 @@ export default function AuthPage() {
         setError('');
         setLoading(true);
 
-        // Doctor login
-        if (isDoctor) {
-            if (!form.email || !form.password) {
-                setError('Please enter email and password');
-                setLoading(false);
-                return;
-            }
-            const result = loginDoctor(form.email, form.password);
-            if (!result.success) {
-                setError(result.error || 'Login failed');
-                setLoading(false);
-                return;
-            }
-            setCurrentDoctor(result.doctor!);
-            router.push('/doctor-dashboard');
+        if (portalRole !== 'patient') {
+            setLoading(true);
+            setTimeout(() => {
+                if (portalRole === 'doctor') {
+                    if (!form.email || !form.password) { setError('Please enter email and password'); setLoading(false); return; }
+                    const result = loginDoctor(form.email, form.password);
+                    if (!result.success) { setError(result.error || 'Login failed'); setLoading(false); return; }
+                    setCurrentDoctor(result.doctor!);
+                    router.push('/doctor-dashboard');
+                } else if (portalRole === 'admin') {
+                    router.push('/admin');
+                } else if (portalRole === 'hospital') {
+                    router.push('/hospital');
+                } else if (portalRole === 'blood-bank') {
+                    router.push('/blood-bank');
+                } else if (portalRole === 'abha-gov') {
+                    router.push('/abha/gov');
+                } else if (portalRole === 'abha-patient') {
+                    router.push('/abha/patient');
+                }
+            }, 500);
             return;
         }
 
@@ -141,7 +147,7 @@ export default function AuthPage() {
                 password: simpleHash(form.password),
                 location: form.location.trim(),
                 avatar: form.avatar,
-                age: '',
+                age: form.age,
                 gender: '',
                 activityLevel: '',
                 existingConditions: [],
@@ -220,7 +226,7 @@ export default function AuthPage() {
                     </div>
                     <h1 style={{ fontSize: 28, fontWeight: 800 }}>HealthSync</h1>
                     <p style={{ color: 'var(--text-secondary)', marginTop: 6, fontSize: 15 }}>
-                        {isDoctor ? 'Doctor Portal' : isSignUp ? 'Create your health profile' : 'Welcome back'}
+                        {portalRole !== 'patient' ? `${portalRole.replace('-', ' ').toUpperCase()} PORTAL` : isSignUp ? 'Create your health profile' : 'Welcome back'}
                     </p>
                 </div>
 
@@ -228,24 +234,41 @@ export default function AuthPage() {
                 <div style={{
                     display: 'flex', background: 'var(--bg-card)', borderRadius: 12, padding: 4, marginBottom: 28,
                 }}>
-                    {['Sign Up', 'Sign In', 'Doctor'].map((label, i) => {
-                        const active = (i === 0 && isSignUp && !isDoctor) || (i === 1 && !isSignUp && !isDoctor) || (i === 2 && isDoctor);
+                    {['Sign Up', 'Sign In'].map((label, i) => {
+                        const active = (i === 0 && isSignUp) || (i === 1 && !isSignUp);
                         return (
                             <button
                                 key={label}
-                                onClick={() => { setError(''); if (i === 0) { setIsSignUp(true); setIsDoctor(false); } else if (i === 1) { setIsSignUp(false); setIsDoctor(false); } else { setIsDoctor(true); setIsSignUp(false); } }}
+                                onClick={() => { setError(''); setIsSignUp(i === 0); setPortalRole('patient'); }}
                                 style={{
                                     flex: 1, padding: '10px 12px', borderRadius: 10, border: 'none',
-                                    background: active ? 'var(--gradient-primary)' : 'transparent',
-                                    color: active ? 'white' : 'var(--text-secondary)',
+                                    background: active && portalRole === 'patient' ? 'var(--gradient-primary)' : 'transparent',
+                                    color: active && portalRole === 'patient' ? 'white' : 'var(--text-secondary)',
                                     fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s ease',
                                 }}
                             >
-                                {i === 2 && <Stethoscope size={13} style={{ marginRight: 4, verticalAlign: 'middle' }} />}
-                                {label}
+                                {label} (Patient)
                             </button>
                         );
                     })}
+                </div>
+                
+                <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>OR ACCESS STAFF PORTALS:</label>
+                    <select 
+                        value={portalRole} 
+                        onChange={(e) => { setPortalRole(e.target.value); setIsSignUp(false); }} 
+                        className="input-field" 
+                        style={{ width: '100%', padding: 12, fontWeight: 600 }}
+                    >
+                        <option value="patient">Select Portal...</option>
+                        <option value="doctor">🩺 Doctor Dashboard</option>
+                        <option value="admin">🛡️ Admin Command Center</option>
+                        <option value="hospital">🏥 Hospital Management</option>
+                        <option value="blood-bank">🩸 Blood Bank Portal</option>
+                        <option value="abha-gov">🏛️ ABHA Authority (Gov)</option>
+                        <option value="abha-patient">🪪 ABHA Kiosk (Patient)</option>
+                    </select>
                 </div>
 
                 {/* Error Message */}
@@ -269,7 +292,7 @@ export default function AuthPage() {
                 {/* Form */}
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <AnimatePresence mode="wait">
-                        {isSignUp && !isDoctor && (
+                        {isSignUp && portalRole === 'patient' && (
                             <motion.div key="avatar" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 12, overflow: 'hidden' }}>
                                 <div style={{ position: 'relative', width: 80, height: 80, marginBottom: 12 }}>
                                     <div style={{
@@ -305,7 +328,7 @@ export default function AuthPage() {
                     </AnimatePresence>
 
                     <AnimatePresence mode="wait">
-                        {isSignUp && !isDoctor && (
+                        {isSignUp && portalRole === 'patient' && (
                             <motion.div key="name" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
                                 <User size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
                                 <input className="input-field" style={{ paddingLeft: 42 }} placeholder="Full Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
@@ -315,11 +338,11 @@ export default function AuthPage() {
 
                     <div style={{ position: 'relative' }}>
                         <Mail size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
-                        <input className="input-field" style={{ paddingLeft: 42 }} type="email" placeholder={isDoctor ? 'Doctor Email' : 'Email Address'} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+                        <input className="input-field" style={{ paddingLeft: 42 }} type="email" placeholder={portalRole === 'doctor' ? 'Doctor Email' : 'Email Address'} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required={portalRole === 'patient' || portalRole === 'doctor'} />
                     </div>
 
                     <AnimatePresence mode="wait">
-                        {isSignUp && !isDoctor && (
+                        {isSignUp && portalRole === 'patient' && (
                             <motion.div key="phone" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
                                 <Phone size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
                                 <input className="input-field" style={{ paddingLeft: 42 }} type="tel" placeholder="Phone Number" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
@@ -328,7 +351,16 @@ export default function AuthPage() {
                     </AnimatePresence>
 
                     <AnimatePresence mode="wait">
-                        {isSignUp && !isDoctor && (
+                        {isSignUp && portalRole === 'patient' && (
+                            <motion.div key="age" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
+                                <User size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
+                                <input className="input-field" style={{ paddingLeft: 42 }} type="number" placeholder="Age" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence mode="wait">
+                        {isSignUp && portalRole === 'patient' && (
                             <motion.div key="location" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ position: 'relative' }}>
                                 <MapPin size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
                                 <input className="input-field" style={{ paddingLeft: 42, paddingRight: 44 }} type="text" placeholder="Location" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
@@ -341,7 +373,7 @@ export default function AuthPage() {
 
                     <div style={{ position: 'relative' }}>
                         <Lock size={18} style={{ position: 'absolute', left: 14, top: 16, color: 'var(--text-muted)' }} />
-                        <input className="input-field" style={{ paddingLeft: 42, paddingRight: 44 }} type={showPassword ? 'text' : 'password'} placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+                        <input className="input-field" style={{ paddingLeft: 42, paddingRight: 44 }} type={showPassword ? 'text' : 'password'} placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required={portalRole === 'patient' || portalRole === 'doctor'} />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 14, top: 14, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 2 }}>
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
@@ -352,12 +384,12 @@ export default function AuthPage() {
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
                         ) : (
                             <>
-                                {isDoctor ? 'Access Portal' : isSignUp ? 'Start Your Journey' : 'Continue'} <ArrowRight size={18} />
+                                {portalRole !== 'patient' ? 'Access Portal' : isSignUp ? 'Start Your Journey' : 'Continue'} <ArrowRight size={18} />
                             </>
                         )}
                     </button>
 
-                    {!isDoctor && (
+                    {portalRole === 'patient' && (
                         <>
                             <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
                                 <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
@@ -379,9 +411,14 @@ export default function AuthPage() {
                 </form>
 
                 {/* Doctor hint */}
-                {isDoctor && (
+                {portalRole === 'doctor' && (
                     <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: 'rgba(14, 165, 233, 0.06)', border: '1px solid rgba(14, 165, 233, 0.12)', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
                         Demo: priya@healthsync.com / doctor123
+                    </div>
+                )}
+                {portalRole !== 'patient' && portalRole !== 'doctor' && (
+                    <div style={{ marginTop: 16, padding: '10px 14px', borderRadius: 10, background: 'rgba(16, 185, 129, 0.06)', border: '1px solid rgba(16, 185, 129, 0.12)', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                        Administrative Access. No password required for demo.
                     </div>
                 )}
 

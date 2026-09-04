@@ -6,7 +6,7 @@ import { motion, useInView } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import {
   Shield, Brain, Stethoscope, Clock, Users, ChartLine,
-  ArrowRight, Upload, Activity, HeartPulse, FileText, Pill, Atom
+  ArrowRight, Upload, Activity, HeartPulse, FileText, Pill, Atom, Leaf
 } from 'lucide-react';
 
 const HeroScene = dynamic(() => import('@/components/three/HeroScene'), { ssr: false });
@@ -122,6 +122,11 @@ export default function LandingPage() {
             <Link href="/auth">
               <button className="btn-secondary" style={{ padding: '14px 32px', fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Stethoscope size={18} /> Doctor Portal
+              </button>
+            </Link>
+            <Link href="/ayurveda">
+              <button className="btn-secondary" style={{ padding: '14px 32px', fontSize: 16, display: 'flex', alignItems: 'center', gap: 8, borderColor: '#10B981', color: '#10B981' }}>
+                <Leaf size={18} /> Ayush Portal
               </button>
             </Link>
           </motion.div>

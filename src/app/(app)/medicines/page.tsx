@@ -32,6 +32,11 @@ const medicines = [
     { name: 'Metoprolol', generic: 'Metoprolol Tartrate', category: 'Blood Pressure', use: 'Hypertension, angina', sideEffects: ['Fatigue', 'Cold hands'], janAushadhi: 18, market: 75, rx: true },
     { name: 'Fluconazole', generic: 'Fluconazole', category: 'Antifungal', use: 'Fungal infections', sideEffects: ['Nausea', 'Headache'], janAushadhi: 15, market: 80, rx: true },
     { name: 'ORS Powder', generic: 'Oral Rehydration Salts', category: 'Rehydration', use: 'Dehydration, diarrhea', sideEffects: ['Rare'], janAushadhi: 5, market: 20, rx: false },
+    { name: 'Ashwagandha', generic: 'Withania Somnifera', category: 'Ayurvedic', use: 'Stress relief, immunity', sideEffects: ['Drowsiness at high doses'], janAushadhi: 80, market: 150, rx: false },
+    { name: 'Triphala Churna', generic: 'Amalaki, Bibhitaki, Haritaki', category: 'Ayurvedic', use: 'Digestion, detox', sideEffects: ['Mild diarrhea initially'], janAushadhi: 60, market: 120, rx: false },
+    { name: 'Giloy Ghanvati', generic: 'Tinospora Cordifolia', category: 'Ayurvedic', use: 'Immunity booster, fever', sideEffects: ['Constipation (rare)'], janAushadhi: 70, market: 140, rx: false },
+    { name: 'Brahmi Vati', generic: 'Bacopa Monnieri', category: 'Ayurvedic', use: 'Memory, focus, stress', sideEffects: ['Stomach upset (rare)'], janAushadhi: 90, market: 180, rx: false },
+    { name: 'Chyawanprash', generic: 'Amla & Ayurvedic Herbs', category: 'Ayurvedic', use: 'Overall immunity and vitality', sideEffects: ['Heartburn if eaten empty stomach'], janAushadhi: 150, market: 250, rx: false },
 ];
 
 const categories = ['All', ...new Set(medicines.map(m => m.category))].sort();

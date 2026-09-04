@@ -10,7 +10,7 @@ import {
 import {
     getCurrentDoctor, getDoctorAppointments, getDoctorPrescriptions,
     getCallLogs, getDoctorNotes, type DoctorAccount,
-    getAllUsers, type UserProfile
+    getAllUsers, type UserProfile, getIntakeSummaries
 } from '@/lib/store';
 
 export default function DoctorDashboard() {
@@ -21,6 +21,7 @@ export default function DoctorDashboard() {
     const [callCount, setCallCount] = useState(0);
     const [noteCount, setNoteCount] = useState(0);
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+    const [kioskSummaries, setKioskSummaries] = useState<ReturnType<typeof getIntakeSummaries>>([]);
 
     useEffect(() => {
         setAllUsers(getAllUsers());
@@ -32,6 +33,9 @@ export default function DoctorDashboard() {
         setPrescriptionCount(getDoctorPrescriptions(doc.id).length);
         setCallCount(getCallLogs(doc.id, 'doctor').length);
         setNoteCount(getDoctorNotes(doc.id).length);
+        
+        // Load MediKiosk Summaries
+        setKioskSummaries(getIntakeSummaries('user1').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     }, []);
 
     if (!doctor) return null;
@@ -95,6 +99,39 @@ export default function DoctorDashboard() {
                     );
                 })}
             </div>
+
+            {/* MediKiosk Intake Summaries */}
+            {kioskSummaries.length > 0 && (
+                <>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>Recent MediKiosk AI Intakes</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, marginBottom: 28 }}>
+                        {kioskSummaries.map((summary, i) => (
+                            <motion.div key={summary.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="glass-card" style={{ padding: 20 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: 16 }}>{summary.patientName || 'Unknown Patient'}</div>
+                                        <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>ABHA: {summary.abhaId || 'N/A'}</div>
+                                    </div>
+                                    <span style={{ fontSize: 12, background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '4px 8px', borderRadius: 8, fontWeight: 600 }}>
+                                        {summary.consultationType}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: 14, color: 'var(--text-primary)', marginBottom: 8, background: 'var(--bg-secondary)', padding: 12, borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div><span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>CC:</span> {summary.chiefComplaint}</div>
+                                    {summary.hpi && <div><span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>HPI:</span> {summary.hpi}</div>}
+                                    {summary.pastMedicalHistory && <div><span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>PMH:</span> {summary.pastMedicalHistory}</div>}
+                                    {summary.drugAllergyHistory && <div><span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>Allergies:</span> {summary.drugAllergyHistory}</div>}
+                                </div>
+                                {summary.redFlags && summary.redFlags.length > 0 && (
+                                    <div style={{ fontSize: 12, color: '#EF4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                        <Activity size={14} /> {summary.redFlags.length} Red Flags Detected
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </>
+            )}
 
             {/* Today's Appointments */}
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>Today&apos;s Appointments</h2>
