@@ -130,6 +130,30 @@ export default function LandingPage() {
               </button>
             </Link>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginTop: 24 }}
+          >
+            {[
+              { name: 'Admin', path: '/admin' },
+              { name: 'Hospital', path: '/hospital' },
+              { name: 'Blood Bank', path: '/blood-bank' },
+              { name: 'ABHA Gov', path: '/abha/gov' },
+              { name: 'ABHA Patient', path: '/abha/patient' }
+            ].map((portal) => (
+              <Link key={portal.path} href={portal.path}>
+                <button style={{ 
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', 
+                  padding: '8px 16px', borderRadius: 20, fontSize: 13, color: 'var(--text-secondary)',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }} className="hover:bg-[rgba(255,255,255,0.1)] hover:text-[var(--text-primary)]">
+                  {portal.name}
+                </button>
+              </Link>
+            ))}
+          </motion.div>
         </div>
       </div>
 

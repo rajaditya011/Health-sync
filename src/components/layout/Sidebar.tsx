@@ -12,16 +12,11 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-    { href: '/dashboard', tKey: 'nav.dashboard', icon: LayoutDashboard },
-    { href: '/digital-twin', tKey: 'nav.digitalTwin', icon: Brain },
-    { href: '/kiosk', tKey: 'Medi Kiosk', icon: Monitor },
+    { href: '/journey/patient-portal', tKey: 'Patient Portal', icon: LayoutDashboard },
+    { href: '/recovery', tKey: 'Recovery Hub', icon: Activity },
+    { href: '/journey/intake', tKey: 'New Check-in', icon: Brain },
     { href: '/vitals', tKey: 'nav.vitals', icon: HeartPulse },
-    { href: '/reports', tKey: 'nav.reports', icon: FileText },
-    { href: '/recovery', tKey: 'nav.recovery', icon: Activity },
-    { href: '/prescriptions', tKey: 'nav.prescriptions', icon: ClipboardList },
     { href: '/medicines', tKey: 'Medicines', icon: Pill },
-    { href: '/doctors', tKey: 'Doctors', icon: Stethoscope },
-    { href: '/calls', tKey: 'nav.calls', icon: Phone },
     { href: '/settings', tKey: 'nav.settings', icon: Settings },
 ];
 

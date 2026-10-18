@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 const GROQ_KEYS = [
     process.env.GROQ_API_KEY_1 || '',
     process.env.GROQ_API_KEY_2 || '',
-];
+].filter(Boolean);
+
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
 export async function POST(request: NextRequest) {
     try {
@@ -31,34 +33,46 @@ export async function POST(request: NextRequest) {
                 systemPrompt = 'You are a helpful health assistant. Respond concisely and accurately.';
         }
 
-        let data;
-        for (let i = 0; i < GROQ_KEYS.length; i++) {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_KEYS[i]}`,
-                },
-                body: JSON.stringify({
-                    model: 'openai/gpt-oss-20b',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: text },
-                    ],
-                    temperature: 0.7,
-                    max_completion_tokens: 1024,
-                }),
-            });
+        let result = '';
+        let lastError: any = null;
 
-            data = await response.json();
-            if (!data.error) break;
+        for (const model of GROQ_MODELS) {
+            for (const key of GROQ_KEYS) {
+                try {
+                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: text },
+                            ],
+                            temperature: 0.7,
+                            max_completion_tokens: 1024,
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (!data.error && data.choices?.[0]?.message?.content) {
+                        result = data.choices[0].message.content;
+                        break;
+                    }
+                    lastError = data?.error;
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            if (result) break;
         }
 
-        if (data?.error) {
-            return NextResponse.json({ error: data.error.message }, { status: 500 });
+        if (!result) {
+            return NextResponse.json({ error: lastError?.message || 'Failed to process voice request' }, { status: 500 });
         }
 
-        const result = data?.choices?.[0]?.message?.content || '';
         return NextResponse.json({ result });
     } catch (error) {
         console.error('Groq API Error:', error);

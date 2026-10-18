@@ -4,40 +4,48 @@ import { PLATFORM_DOCTORS } from '@/lib/data';
 const GROQ_KEYS = [
     process.env.GROQ_API_KEY_1 || '',
     process.env.GROQ_API_KEY_2 || '',
-];
+].filter(Boolean);
 
-async function callGroq(messages: { role: string; content: string }[], systemPrompt: string, keyIndex = 0): Promise<string> {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${GROQ_KEYS[keyIndex]}`,
-        },
-        body: JSON.stringify({
-            model: 'openai/gpt-oss-20b',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                ...messages.map(m => ({
-                    role: m.role === 'ai' ? 'assistant' : 'user',
-                    content: m.content,
-                })),
-            ],
-            temperature: 0.7,
-            max_completion_tokens: 2048,
-        }),
-    });
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
-    const data = await response.json();
+async function callGroq(messages: { role: string; content: string }[], systemPrompt: string): Promise<string> {
+    let lastError: any = null;
 
-    if (data.error && keyIndex === 0) {
-        return callGroq(messages, systemPrompt, 1);
+    for (const model of GROQ_MODELS) {
+        for (const key of GROQ_KEYS) {
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`,
+                    },
+                    body: JSON.stringify({
+                        model,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            ...messages.map(m => ({
+                                role: m.role === 'ai' ? 'assistant' : 'user',
+                                content: m.content,
+                            })),
+                        ],
+                        temperature: 0.7,
+                        max_completion_tokens: 2048,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!data.error && data.choices?.[0]?.message?.content) {
+                    return data.choices[0].message.content;
+                }
+                lastError = data.error || new Error('Empty response');
+            } catch (err) {
+                lastError = err;
+            }
+        }
     }
 
-    if (data.error) {
-        throw new Error(data.error.message || 'Groq API error');
-    }
-
-    return data.choices?.[0]?.message?.content || 'I apologize, I could not generate a response. Please try again.';
+    throw new Error(lastError?.message || 'Failed to call Groq API');
 }
 
 export async function POST(request: NextRequest) {

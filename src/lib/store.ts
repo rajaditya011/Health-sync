@@ -221,6 +221,117 @@ export interface MedicineOrder {
     deliveryAddress: string;
 }
 
+
+// ---------- New Single Source of Truth Models ----------
+
+export enum JourneyStep {
+    PORTAL = 'PORTAL',
+    INTAKE = 'INTAKE',
+    MEDIKIOSK = 'MEDIKIOSK',
+    DIGITAL_TWIN = 'DIGITAL_TWIN',
+    REPORTS = 'REPORTS',
+    TIMELINE = 'TIMELINE',
+    BOOKING = 'BOOKING',
+    CONSULTATION = 'CONSULTATION',
+    AI_ANALYSIS = 'AI_ANALYSIS',
+    DRAFT_PLAN = 'DRAFT_PLAN',
+    DOCTOR_APPROVAL = 'DOCTOR_APPROVAL',
+    PATIENT_PORTAL = 'PATIENT_PORTAL',
+    RECOVERY = 'RECOVERY',
+    COMPLETED = 'COMPLETED',
+    EMERGENCY = 'EMERGENCY'
+}
+
+export interface PatientJourney {
+    id: string;
+    userId: string;
+    currentStep: JourneyStep;
+    pathway?: 'Allopathic' | 'AYUSH' | 'Chronic Care' | 'Mental Health' | string;
+    reasonForVisit?: string;
+    intakeAnswers?: Record<string, any>;
+    symptoms?: any[];
+    redFlagDetected?: boolean;
+    reports?: string[]; // IDs of MedicalReports
+    timeline?: any[];
+    aiSummary?: string;
+    medications?: any[];
+    kioskData?: { bp?: string; temp?: string; hr?: string; [key: string]: any };
+    physicianSummary?: string;
+    appointmentId?: string;
+    consultationId?: string;
+    aiAnalysisId?: string;
+    draftCarePlanId?: string;
+    approvedCarePlanId?: string;
+    verified?: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ConsultationSession {
+    id: string;
+    journeyId: string;
+    doctorId: string;
+    patientId: string;
+    type: 'online' | 'physical';
+    patientConsent: boolean;
+    doctorConsent: boolean;
+    transcript?: string;
+    notes?: string;
+    recordingAvailable: boolean;
+    startedAt: string;
+    endedAt?: string;
+}
+
+export interface AIAnalysisRecord {
+    id: string;
+    journeyId: string;
+    consultationId: string;
+    extractedSymptoms: string[];
+    extractedMedicines: string[];
+    extractedAdvice: string[];
+    observations: string;
+    source: string;
+    timestamp: string;
+}
+
+export interface CarePlanDraft {
+    id: string;
+    journeyId: string;
+    aiAnalysisId: string;
+    medicines: { name: string; dosage: string; frequency: string; duration: string; notes: string }[];
+    dietGuidance: string;
+    lifestyleGuidance: string;
+    followUpDays: number;
+    generalInstructions: string;
+    status: 'draft' | 'approved' | 'rejected';
+    doctorNotes?: string;
+    timestamp: string;
+}
+
+export interface CarePlanApproved {
+    id: string;
+    draftId: string;
+    journeyId: string;
+    doctorId: string;
+    medicines: { name: string; dosage: string; frequency: string; duration: string; notes: string }[];
+    dietGuidance: string;
+    lifestyleGuidance: string;
+    followUpDate: string;
+    generalInstructions: string;
+    timestamp: string;
+}
+
+export interface AuditLogEntry {
+    id: string;
+    actorId: string;
+    actorRole: 'patient' | 'doctor' | 'system';
+    action: string;
+    targetEntity: string;
+    targetId: string;
+    metadata?: Record<string, any>;
+    timestamp: string;
+}
+
 // ---------- Simple hash ----------
 export function simpleHash(str: string): string {
     let hash = 0;
@@ -442,6 +553,37 @@ export function getPatientData(userId: string, doctorId?: string) {
 // ---------- Generate unique IDs ----------
 export const generateId = () => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// ---------- Patient Journey State ----------
+export const getActiveJourney = (userId: string): PatientJourney | null => {
+    const journeys: PatientJourney[] = getStorage(`hs_patient_journeys_${userId}`) || [];
+    return journeys.find(j => j.currentStep !== JourneyStep.COMPLETED && j.currentStep !== JourneyStep.EMERGENCY) || null;
+};
+
+export const saveJourney = (journey: PatientJourney) => {
+    const key = `hs_patient_journeys_${journey.userId}`;
+    const all: PatientJourney[] = getStorage(key) || [];
+    const index = all.findIndex(j => j.id === journey.id);
+    if (index >= 0) all[index] = journey;
+    else all.push(journey);
+    setStorage(key, all);
+};
+
+export const getJourneyById = (userId: string, journeyId: string): PatientJourney | null => {
+    const all: PatientJourney[] = getStorage(`hs_patient_journeys_${userId}`) || [];
+    return all.find(j => j.id === journeyId) || null;
+};
+
+// ---------- Audit Logs ----------
+export const addAuditLog = (log: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
+    const all: AuditLogEntry[] = getStorage('hs_global_audit_logs') || [];
+    all.push({
+        ...log,
+        id: generateId(),
+        timestamp: new Date().toISOString()
+    });
+    setStorage('hs_global_audit_logs', all);
 };
 
 // ---------- Intake Summaries ----------

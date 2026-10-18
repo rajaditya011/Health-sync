@@ -3,15 +3,22 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Mic, Upload, CheckCircle, FileText, Loader2, ArrowRight, User, Stethoscope, X } from 'lucide-react';
-import { generateId, saveIntakeSummary, ClinicalIntakeSummary } from '@/lib/store';
+import { generateId, saveIntakeSummary, ClinicalIntakeSummary, getCurrentUser } from '@/lib/store';
 import { getPatientByAbhaId, AbhaPatient } from '@/lib/abhaDb';
 
 type KioskStep = 'START' | 'CONSENT' | 'CONVERSE' | 'SCAN' | 'SUMMARIZE' | 'COMPLETE';
 
 export default function KioskPage() {
     const [step, setStep] = useState<KioskStep>('START');
-    const [patientId, setPatientId] = useState('user1'); // Mock ID
+    const [patientId, setPatientId] = useState('');
     const [abhaId, setAbhaId] = useState('');
+
+    useEffect(() => {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
+            setPatientId(currentUser.id);
+        }
+    }, []);
     const [patientContext, setPatientContext] = useState<AbhaPatient | null>(null);
     const [consultationType, setConsultationType] = useState<'Allopathic' | 'AYUSH'>('Allopathic');
     
@@ -167,10 +174,11 @@ export default function KioskPage() {
             const summary = await res.json();
 
             // Save to store
+            const currentUser = getCurrentUser();
             const finalSummary: ClinicalIntakeSummary = {
                 id: generateId(),
-                userId: patientId, // Would be actual user ID in prod
-                patientName: patientContext?.name,
+                userId: patientId, 
+                patientName: patientContext?.name || currentUser?.name || 'Unknown',
                 abhaId: patientContext?.abhaId,
                 date: new Date().toISOString(),
                 consultationType,

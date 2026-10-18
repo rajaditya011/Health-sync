@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HealthSync — SIH Round 2 — 100 Questions</title>
+<style>
+  @media print {
+    body { font-size: 11pt; }
+    h1 { page-break-before: always; }
+    h1:first-of-type { page-break-before: avoid; }
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 24px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  h1 { color: #0d47a1; border-bottom: 3px solid #0d47a1; padding-bottom: 8px; margin-top: 48px; font-size: 22pt; }
+  h1:first-child { margin-top: 0; }
+  h2 { color: #1565c0; margin-top: 32px; }
+  hr { border: none; border-top: 2px solid #e0e0e0; margin: 32px 0; }
+  strong { color: #0d47a1; }
+  p strong:first-child { display: block; font-size: 13pt; margin-top: 20px; color: #1a1a1a; }
+  code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 10pt; }
+  pre { background: #f5f5f5; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 9pt; border: 1px solid #e0e0e0; }
+  pre code { background: none; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 10pt; }
+  th { background: #0d47a1; color: white; }
+  tr:nth-child(even) { background: #f9f9f9; }
+  blockquote { border-left: 4px solid #0d47a1; margin: 16px 0; padding: 8px 16px; background: #e3f2fd; }
+</style>
+</head>
+<body>
+<h1>HealthSync — Smart India Hackathon Round 2</h1>
+<h1>Complete Defense Q&amp;A (100 Questions)</h1>
+<p><strong>Team Preparation Document — September 2026</strong>
+<strong>Project: HealthSync — AI-Powered Healthcare Accessibility Platform</strong></p>
+<hr>
+<h1>SECTION A: TECHNICAL ARCHITECTURE &amp; TECH STACK (Q1–Q15)</h1>
+<hr>
+<p><strong>Q1. What is the complete tech stack of HealthSync?</strong></p>
+<p><strong>A:</strong> HealthSync is built on a modern, production-grade web stack:</p>
+<ul>
+<li><strong>Framework:</strong> Next.js 16 (App Router) with React 19 and TypeScript</li>
+<li><strong>Styling:</strong> Tailwind CSS 4 with custom CSS variables for theming</li>
+<li><strong>3D Graphics:</strong> Three.js + React Three Fiber + Drei for the Digital Twin body model</li>
+<li><strong>Animations:</strong> Framer Motion for page transitions and micro-interactions</li>
+<li><strong>AI Backend:</strong> Groq API (openai/gpt-oss-20b model) for ultra-fast LLM inference</li>
+<li><strong>OCR Engine:</strong> Tesseract.js for on-device medical report text extraction</li>
+<li><strong>Charts:</strong> Recharts for vitals visualization and health trend graphs</li>
+<li><strong>Icons:</strong> Lucide React (575+ medical and UI icons)</li>
+</ul>
+<hr>
+<p><strong>Q2. Why did you choose Next.js over other frameworks like React or Angular?</strong></p>
+<p><strong>A:</strong> Next.js gives us three critical advantages:</p>
+<ol>
+<li><strong>Server-side API Routes</strong> — All our AI calls (Groq, OCR) happen in <code>/api/ai/*</code> routes on the server. API keys are NEVER exposed to the browser. This is impossible in plain React without a separate backend.</li>
+<li><strong>App Router</strong> — Lets us build complex role-based layouts (Patient sidebar vs Doctor sidebar vs Hospital admin) with nested layouts and route groups like <code>(app)/</code> for authenticated pages.</li>
+<li><strong>Turbopack</strong> — Next.js 16 ships with Turbopack, giving us sub-100ms hot reloads during development, which was critical for our rapid hackathon iteration cycle.</li>
+</ol>
+<hr>
+<p><strong>Q3. How does the 3D Digital Twin work technically?</strong></p>
+<p><strong>A:</strong> The Digital Twin uses React Three Fiber to render a WebGL canvas inside the browser. We define 20+ body parts (Head, Chest, Left Arm, Abdomen, etc.) using primitive geometries — <code>SphereGeometry</code> for joints and <code>CapsuleGeometry</code> for limbs. Each body part is a clickable mesh with:</p>
+<ul>
+<li><strong>Hover detection</strong> — <code>onPointerOver</code>/<code>onPointerOut</code> events scale the part up and change cursor</li>
+<li><strong>Symptom color mapping</strong> — Healthy parts show their default color; Mild symptoms turn yellow (#F59E0B), Moderate turns orange (#F97316), Severe turns red (#EF4444)</li>
+<li><strong>Holographic shader</strong> — A custom <code>MeshPhysicalMaterial</code> with clearcoat, emissive pulsing, and transparency creates the futuristic holographic look</li>
+<li><strong>Scan ring animation</strong> — A torus geometry orbits the body using <code>useFrame</code> for the scanning effect</li>
+</ul>
+<p>When a user clicks a body part and selects a severity level, that data is passed to the AI chat context, so the AI knows exactly which areas are affected.</p>
+<hr>
+<p><strong>Q4. How many API routes does your backend have and what does each do?</strong></p>
+<p><strong>A:</strong> We have 6 dedicated AI API routes:</p>
+<ol>
+<li><code>/api/ai/chat</code> — General health conversation with the Digital Twin AI</li>
+<li><code>/api/ai/intake</code> — MediKiosk structured clinical intake using the SOCRATES framework</li>
+<li><code>/api/ai/summarize-intake</code> — Synthesizes the kiosk conversation into a structured Clinical Intake Summary (JSON)</li>
+<li><code>/api/ai/analyze-report</code> — Parses uploaded medical reports (images via OCR, PDFs, text) and returns structured analysis with urgency levels</li>
+<li><code>/api/ai/voice</code> — Voice-based health assistant processing</li>
+<li><code>/api/ai/analyze-appointment</code> — Pre-appointment intelligence gathering</li>
+</ol>
+<p>Each route is a Next.js server-side Route Handler — meaning all API keys and AI processing logic stays on the server.</p>
+<hr>
+<p><strong>Q5. What AI model are you using and why?</strong></p>
+<p><strong>A:</strong> We use <code>openai/gpt-oss-20b</code> hosted on the Groq platform. We chose this combination because:</p>
+<ul>
+<li><strong>Groq&#39;s LPU (Language Processing Unit)</strong> delivers inference speeds 10-18x faster than traditional GPU-based providers, which is critical for real-time voice conversations and kiosk interactions</li>
+<li><strong>gpt-oss-20b</strong> is an open-source 20-billion parameter reasoning model that supports JSON structured output (<code>response_format: { type: &quot;json_object&quot; }</code>), which is essential for our clinical intake system</li>
+<li><strong>Cost efficiency</strong> — Groq&#39;s pricing model is extremely competitive for hackathon-scale usage</li>
+</ul>
+<hr>
+<p><strong>Q6. How does the OCR system work for medical reports?</strong></p>
+<p><strong>A:</strong> Our report analysis pipeline handles three types of uploads:</p>
+<ol>
+<li><strong>Text files (.txt, .csv)</strong> — Read directly as text using <code>FileReader.readAsText()</code></li>
+<li><strong>PDFs (.pdf)</strong> — Extracted server-side using the <code>pdf-parse</code> library which converts PDF binary data to text</li>
+<li><strong>Images (.jpg, .png, .webp, .heic)</strong> — Converted to base64 on the client, sent to the server, then processed by <code>Tesseract.js</code> (an open-source OCR engine) to extract text from the image</li>
+</ol>
+<p>After text extraction, the content is sent to our Groq AI model with a structured prompt that returns a JSON analysis containing: layman summary, technical summary, abnormalities, recommendations, urgency level (Green/Amber/Red), suggested specialist, estimated condition, medication suggestions, follow-up tests, and Jan Aushadhi generic alternatives.</p>
+<hr>
+<p><strong>Q7. How do you handle API key rotation and fallback?</strong></p>
+<p><strong>A:</strong> We implement a dual-key failover system. Our <code>.env.local</code> stores two Groq API keys (<code>GROQ_API_KEY_1</code> and <code>GROQ_API_KEY_2</code>). Every AI route handler implements a retry loop:</p>
+<pre><code>for (let i = 0; i &lt; GROQ_KEYS.length; i++) {
+    const response = await fetch(GROQ_ENDPOINT, { Authorization: Bearer ${GROQ_KEYS[i]} });
+    data = await response.json();
+    if (!data.error) break; // Success — stop retrying
+}
+</code></pre>
+<p>If Key 1 hits a rate limit or fails, we automatically fall back to Key 2 with zero user-facing downtime. This pattern can be extended to N keys for production.</p>
+<hr>
+<p><strong>Q8. What is the role of the <code>store.ts</code> file?</strong></p>
+<p><strong>A:</strong> <code>store.ts</code> is the centralized data access layer of HealthSync. It provides 50+ helper functions that abstract all read/write operations. Key functions include:</p>
+<ul>
+<li><code>getCurrentUser()</code> / <code>setCurrentUser()</code> — Authentication state</li>
+<li><code>getReports()</code> / <code>addReport()</code> — Medical report management</li>
+<li><code>getVitals()</code> / <code>addVital()</code> — Vitals data (BP, heart rate, SpO2, etc.)</li>
+<li><code>getJourneys()</code> / <code>setJourneys()</code> — Recovery journey management</li>
+<li><code>getAppointments()</code> / <code>addAppointment()</code> — Doctor appointment booking</li>
+<li><code>saveIntakeSummary()</code> / <code>getIntakeSummaries()</code> — MediKiosk clinical summaries</li>
+<li><code>shareReportWithDoctor()</code> / <code>autoShareReportsWithDoctor()</code> — Cross-role data sharing</li>
+</ul>
+<p>All data is keyed by user ID (e.g., <code>{userId}_hs_reports</code>) and persisted in <code>localStorage</code> for the prototype. The abstraction layer means we can swap localStorage for PostgreSQL, MongoDB, or Firebase without changing a single UI component.</p>
+<hr>
+<p><strong>Q9. How does the real-time data sharing between Patient and Doctor portals work?</strong></p>
+<p><strong>A:</strong> When a patient uploads a report, the system:</p>
+<ol>
+<li>Saves the report via <code>addReport()</code> with all AI analysis data</li>
+<li>Calls <code>autoShareReportsWithDoctor()</code> which checks all active appointments</li>
+<li>Marks the report&#39;s <code>sharedWith</code> array with the doctor&#39;s user ID</li>
+<li>When the doctor opens their dashboard, <code>getSharedReportsForDoctor()</code> queries all reports where <code>sharedWith</code> includes their ID</li>
+<li>The doctor sees the full AI analysis, urgency level, and can add their own clinical notes</li>
+</ol>
+<p>We also use the <code>window.addEventListener(&#39;storage&#39;)</code> event to enable real-time cross-tab synchronization — if the patient uploads a report in Tab A, the doctor dashboard in Tab B updates automatically.</p>
+<hr>
+<p><strong>Q10. What is the <code>ai-context.ts</code> module and why is it important?</strong></p>
+<p><strong>A:</strong> <code>ai-context.ts</code> contains <code>buildAIContext()</code> and <code>formatContextForAI()</code> — two functions that aggregate the patient&#39;s complete medical profile before every AI call. The context includes:</p>
+<ul>
+<li>Current vitals (BP, heart rate, SpO2, temperature, weight)</li>
+<li>Active medications and prescriptions</li>
+<li>Recent medical reports and their analyses</li>
+<li>Active recovery journeys</li>
+<li>Past appointment history</li>
+</ul>
+<p>This context is injected into every AI system prompt, so the AI is always aware of the patient&#39;s full medical state. For example, if a patient with diabetes asks about a headache, the AI can correlate it with potential blood sugar fluctuations rather than giving a generic response.</p>
+<hr>
+<p><strong>Q11. How is routing and authentication handled?</strong></p>
+<p><strong>A:</strong> We use Next.js route groups:</p>
+<ul>
+<li><code>(app)/</code> — All authenticated patient pages (dashboard, vitals, reports, digital twin, etc.)</li>
+<li><code>doctor-dashboard/</code> — All doctor-facing pages</li>
+<li><code>hospital/</code>, <code>blood-bank/</code>, <code>ayurveda/</code>, <code>admin/</code> — Administrative portals</li>
+</ul>
+<p>Authentication is handled in <code>(app)/layout.tsx</code> which checks <code>getCurrentUser()</code> on every page load. If no user is found, it redirects to <code>/auth</code>. If onboarding is incomplete, it redirects to <code>/onboarding</code>. The doctor dashboard has its own <code>layout.tsx</code> with separate authentication logic checking for doctor-type accounts.</p>
+<hr>
+<p><strong>Q12. How do you handle speech recognition and text-to-speech?</strong></p>
+<p><strong>A:</strong> We use the Web Speech API which is built into modern browsers:</p>
+<ul>
+<li><strong>Speech Recognition</strong> — <code>window.SpeechRecognition</code> or <code>window.webkitSpeechRecognition</code> for voice input. We support both <code>en-IN</code> (English India) and <code>hi-IN</code> (Hindi India) locales.</li>
+<li><strong>Text-to-Speech</strong> — <code>window.speechSynthesis</code> with <code>SpeechSynthesisUtterance</code> for reading AI responses aloud. We strip markdown formatting before speaking and limit to 800 characters for natural speech flow.</li>
+</ul>
+<p>In the MediKiosk, voice is the primary input method — the patient speaks, the AI responds, and the system automatically reads the response aloud for a fully hands-free experience.</p>
+<hr>
+<p><strong>Q13. What charting/visualization libraries do you use?</strong></p>
+<p><strong>A:</strong> We use Recharts for all health data visualization:</p>
+<ul>
+<li><strong>Line charts</strong> for vitals trends (blood pressure, heart rate over time)</li>
+<li><strong>Area charts</strong> for SpO2 saturation levels</li>
+<li><strong>Bar charts</strong> for medication adherence tracking</li>
+<li><strong>Responsive containers</strong> that adapt to mobile and desktop screens</li>
+</ul>
+<p>All charts use our theming system (CSS variables) so they automatically adjust to light/dark mode.</p>
+<hr>
+<p><strong>Q14. How does the MediKiosk structured intake work technically?</strong></p>
+<p><strong>A:</strong> The Kiosk follows a 6-step pipeline:</p>
+<ol>
+<li><strong>START</strong> — Welcome screen with language selection</li>
+<li><strong>CONSENT</strong> — Patient enters ABHA ID (if available) and selects consultation type (Allopathic or AYUSH)</li>
+<li><strong>CONVERSE</strong> — AI conducts a structured interview using the SOCRATES clinical framework (Site, Onset, Character, Radiation, Associated symptoms, Timing, Exacerbating/relieving factors, Severity). The AI asks ONE question at a time and responds in JSON format with <code>{ response, status, redFlagDetected }</code>.</li>
+<li><strong>SCAN</strong> — Patient uploads documents (prescriptions, lab reports) which are OCR-scanned via Tesseract.js</li>
+<li><strong>SUMMARIZE</strong> — The <code>/api/ai/summarize-intake</code> route synthesizes the entire conversation and documents into a structured Clinical Intake Summary JSON</li>
+<li><strong>COMPLETE</strong> — The summary is saved and made available to the doctor&#39;s dashboard</li>
+</ol>
+<hr>
+<p><strong>Q15. How is the project structured in terms of files and folders?</strong></p>
+<p><strong>A:</strong> The project follows Next.js 16 App Router conventions:</p>
+<pre><code>src/
+├── app/
+│   ├── (app)/          → Patient portal (authenticated)
+│   │   ├── dashboard/
+│   │   ├── digital-twin/
+│   │   ├── vitals/
+│   │   ├── reports/
+│   │   ├── recovery/
+│   │   ├── prescriptions/
+│   │   ├── medicines/
+│   │   ├── doctors/
+│   │   ├── settings/
+│   │   └── emergency/
+│   ├── api/ai/         → Server-side AI routes
+│   ├── auth/           → Login/Registration
+│   ├── onboarding/     → New user onboarding
+│   ├── kiosk/          → MediKiosk interface
+│   ├── doctor-dashboard/ → Doctor portal
+│   ├── hospital/       → Hospital admin
+│   ├── blood-bank/     → Blood bank management
+│   ├── ayurveda/       → AYUSH ministry dashboard
+│   ├── admin/          → Super admin command center
+│   └── abha/           → ABHA national database portal
+├── components/
+│   └── layout/Sidebar.tsx
+└── lib/
+    ├── store.ts        → Data access layer
+    ├── data.ts         → Doctor/hospital seed data
+    ├── abhaDb.ts       → ABHA patient database
+    ├── ai-context.ts   → AI context builder
+    └── translations.ts → Multi-language support
+</code></pre>
+<hr>
+<h1>SECTION B: DATABASE &amp; DATA MANAGEMENT (Q16–Q25)</h1>
+<hr>
+<p><strong>Q16. What database are you using?</strong></p>
+<p><strong>A:</strong> For this hackathon prototype, we use browser <code>localStorage</code> as our persistence layer, abstracted through <code>store.ts</code>. This gives us:</p>
+<ul>
+<li><strong>Zero setup</strong> — No database server needed for the demo</li>
+<li><strong>Instant reads/writes</strong> — Sub-millisecond data access</li>
+<li><strong>Cross-tab sync</strong> — Via the <code>storage</code> event listener</li>
+<li><strong>Role isolation</strong> — Data is keyed by user ID (<code>{userId}_hs_reports</code>, <code>{userId}_hs_vitals</code>, etc.)</li>
+</ul>
+<p>For production, the <code>store.ts</code> abstraction can be replaced with any database backend (PostgreSQL, MongoDB, Firebase Firestore) without changing a single UI component, because all data access goes through function calls like <code>getReports()</code> and <code>addReport()</code>.</p>
+<hr>
+<p><strong>Q17. How would you migrate to a production database?</strong></p>
+<p><strong>A:</strong> The migration would involve three steps:</p>
+<ol>
+<li><strong>Replace <code>store.ts</code> functions</strong> — Swap <code>localStorage.getItem()</code> / <code>setItem()</code> calls with database client calls (e.g., Prisma ORM for PostgreSQL, Mongoose for MongoDB)</li>
+<li><strong>Add a REST/GraphQL API layer</strong> — Move data operations to proper API routes with authentication middleware</li>
+<li><strong>Add user authentication</strong> — Integrate NextAuth.js or Firebase Auth for proper JWT-based authentication</li>
+</ol>
+<p>The key point is that our entire UI layer calls <code>getReports()</code>, not <code>localStorage.getItem(&#39;hs_reports&#39;)</code>. This abstraction was an intentional architectural decision to make the migration seamless.</p>
+<hr>
+<p><strong>Q18. How is patient data organized?</strong></p>
+<p><strong>A:</strong> Each patient&#39;s data is stored in separate namespaced keys:</p>
+<ul>
+<li><code>hs_currentUser</code> — Active session user profile (name, email, age, blood group, medical conditions)</li>
+<li><code>{userId}_hs_reports</code> — Array of medical reports with AI analyses</li>
+<li><code>{userId}_hs_vitals</code> — Array of vitals readings (BP, heart rate, SpO2, temperature, weight)</li>
+<li><code>{userId}_hs_journeys</code> — Array of recovery journeys (timeline, medications, diet plans)</li>
+<li><code>{userId}_hs_appointments</code> — Array of doctor appointments</li>
+<li><code>{userId}_hs_intake_summaries</code> — Array of MediKiosk clinical intake summaries</li>
+<li><code>{userId}_hs_digital_twin_chat</code> — Chat history with the Digital Twin AI</li>
+<li><code>{userId}_hs_orders</code> — Medicine orders from the pharmacy module</li>
+</ul>
+<hr>
+<p><strong>Q19. How does the ABHA database work in your system?</strong></p>
+<p><strong>A:</strong> We have a simulated ABHA National Database (<code>abhaDb.ts</code>) containing 50 deterministic mock patient records. Each record has:</p>
+<ul>
+<li>ABHA ID (format: <code>91-XXXX-XXXX-XXXX</code>)</li>
+<li>Patient name, phone, email</li>
+<li>Blood group</li>
+<li>Medical history (if any)</li>
+</ul>
+<p>When a patient enters their ABHA ID at the MediKiosk, the system calls <code>getPatientByAbhaId()</code> to retrieve their pre-existing records. This data is then injected into the AI intake prompt so the AI can say things like &quot;I see from your ABHA records that you have a history of Type 2 Diabetes. Is that still being managed?&quot; — creating a personalized, context-aware experience.</p>
+<p>In production, this would connect to the actual ABDM (Ayushman Bharat Digital Mission) APIs.</p>
+<hr>
+<p><strong>Q20. How do you handle data consistency across the Patient and Doctor portals?</strong></p>
+<p><strong>A:</strong> Both portals read from the same underlying data store. When a patient adds a report or books an appointment:</p>
+<ol>
+<li>The data is saved with the patient&#39;s user ID</li>
+<li>The <code>sharedWith</code> field links it to the doctor&#39;s user ID</li>
+<li>The doctor&#39;s dashboard queries all data where their ID appears in <code>sharedWith</code></li>
+</ol>
+<p>We also use the <code>window.addEventListener(&#39;storage&#39;)</code> event to detect cross-tab changes, so if the patient uploads a report while the doctor dashboard is open in another tab, the doctor sees it immediately.</p>
+<hr>
+<p><strong>Q21. What is the data model for a Medical Report?</strong></p>
+<p><strong>A:</strong> Each report follows this TypeScript interface:</p>
+<pre><code class="language-typescript">interface MedicalReport {
+    id: string;
+    userId: string;
+    fileName: string;
+    uploadDate: string;
+    fileData: string;           // First 5000 chars of content
+    aiSummary: string;          // Layman explanation
+    technicalSummary: string;   // Doctor-facing summary
+    abnormalities: string[];    // List of abnormal findings
+    recommendations: string[];  // Action items
+    urgencyLevel: &#39;green&#39; | &#39;amber&#39; | &#39;red&#39;;
+    fileType: string;
+    category: string;           // prescriptions | laboratory | discharge | imaging | other
+    sharedWith: string[];       // Doctor IDs
+}
+</code></pre>
+<hr>
+<p><strong>Q22. How do you prevent data loss or corruption?</strong></p>
+<p><strong>A:</strong> Multiple safeguards:</p>
+<ol>
+<li><strong>Atomic writes</strong> — Each <code>setItem()</code> call writes the full array, not individual items</li>
+<li><strong>Try-catch wrappers</strong> — All localStorage operations are wrapped in try-catch blocks</li>
+<li><strong>Data validation</strong> — AI responses are parsed with fallback JSON extraction (<code>text.match(/\{[\s\S]*\}/)</code>) to handle malformed responses</li>
+<li><strong>ID generation</strong> — Every record uses <code>generateId()</code> which creates unique IDs using <code>Date.now().toString(36) + Math.random().toString(36)</code></li>
+</ol>
+<hr>
+<p><strong>Q23. How are clinical intake summaries structured?</strong></p>
+<p><strong>A:</strong> The AI generates a structured JSON object:</p>
+<pre><code class="language-json">{
+    &quot;chiefComplaint&quot;: &quot;Persistent headache for 3 days&quot;,
+    &quot;hpi&quot;: &quot;Site: Frontal bilateral. Onset: Gradual, 3 days ago...&quot;,
+    &quot;pastMedicalHistory&quot;: &quot;Type 2 Diabetes, Hypertension&quot;,
+    &quot;drugAllergyHistory&quot;: &quot;Allergic to Penicillin&quot;,
+    &quot;reviewOfSystems&quot;: &quot;No nausea, no visual disturbances&quot;,
+    &quot;familyHistory&quot;: &quot;Father had MI at age 55&quot;,
+    &quot;prakriti&quot;: &quot;Vata-Pitta&quot;,          // Only for AYUSH
+    &quot;vikriti&quot;: &quot;Pitta aggravation&quot;,    // Only for AYUSH
+    &quot;agni&quot;: &quot;Vishama Agni&quot;,           // Only for AYUSH
+    &quot;aharaVihara&quot;: &quot;Irregular meals, sedentary lifestyle&quot;, // Only for AYUSH
+    &quot;redFlags&quot;: []
+}
+</code></pre>
+<hr>
+<p><strong>Q24. How much data can the system handle?</strong></p>
+<p><strong>A:</strong> localStorage has a ~5MB limit per origin. For our prototype, this comfortably handles:</p>
+<ul>
+<li>100+ medical reports</li>
+<li>1000+ vitals readings</li>
+<li>50+ appointments</li>
+<li>50+ chat sessions</li>
+</ul>
+<p>For production, moving to a cloud database removes this limit entirely. Our <code>store.ts</code> abstraction ensures this migration requires zero UI changes.</p>
+<hr>
+<p><strong>Q25. How do you handle the 50 mock ABHA patients?</strong></p>
+<p><strong>A:</strong> The <code>abhaDb.ts</code> file generates 50 deterministic patient records using a seeded pseudo-random function (<code>Math.sin(seed)</code>) to ensure Server-Side Rendering (SSR) and Client-Side Rendering (CSR) produce identical data (preventing React hydration mismatches). The data includes realistic Indian names, phone numbers, blood groups, and medical conditions. Any edits made through the ABHA Gov portal are persisted to localStorage under the <code>abhaDatabase_v1</code> key.</p>
+<hr>
+<h1>SECTION C: SECURITY &amp; PRIVACY (Q26–Q35)</h1>
+<hr>
+<p><strong>Q26. How do you protect API keys?</strong></p>
+<p><strong>A:</strong> All API keys are stored in <code>.env.local</code> (which is gitignored) and accessed only in server-side API routes (<code>/api/ai/*</code>). These routes run in Node.js on the server — the browser never sees, downloads, or has access to any API key. This is a fundamental security advantage of Next.js server-side routes over client-side React apps.</p>
+<hr>
+<p><strong>Q27. Is patient data encrypted?</strong></p>
+<p><strong>A:</strong> In the current prototype, data is stored in localStorage which is sandboxed by the browser&#39;s Same-Origin Policy — no other website can access it. For production:</p>
+<ol>
+<li><strong>In transit</strong> — All communication would be over HTTPS/TLS 1.3</li>
+<li><strong>At rest</strong> — Database encryption (AES-256) for all patient records</li>
+<li><strong>Field-level encryption</strong> — Sensitive fields like ABHA ID, medical history, and prescriptions would be individually encrypted</li>
+</ol>
+<hr>
+<p><strong>Q28. How do you handle HIPAA/DISHA compliance?</strong></p>
+<p><strong>A:</strong> For the Indian healthcare context, the relevant framework is DISHA (Digital Information Security in Healthcare Act) and the ABDM guidelines. Our architecture supports compliance through:</p>
+<ol>
+<li><strong>Role-Based Access Control (RBAC)</strong> — Patients see only their data; doctors see only data shared with them; admins see aggregate metrics only</li>
+<li><strong>Audit trails</strong> — Every report upload, share action, and AI interaction is timestamped</li>
+<li><strong>Data minimization</strong> — We store only the first 5000 characters of report content, not the full file</li>
+<li><strong>Consent-based sharing</strong> — Reports are shared with doctors only after the patient has booked an appointment or explicitly shared</li>
+</ol>
+<hr>
+<p><strong>Q29. Can the AI be manipulated to give dangerous medical advice?</strong></p>
+<p><strong>A:</strong> We have multiple safeguards:</p>
+<ol>
+<li><strong>System prompt guardrails</strong> — Every AI route includes strict instructions: &quot;NEVER diagnose. Use phrases like &#39;these results may suggest&#39; or &#39;your doctor should evaluate&#39;&quot;</li>
+<li><strong>Urgency escalation</strong> — If the AI detects red-flag symptoms (chest pain, difficulty breathing, stroke signs), it immediately recommends emergency care</li>
+<li><strong>Disclaimer injection</strong> — Every AI analysis includes a mandatory disclaimer that it must be verified by a qualified healthcare provider</li>
+<li><strong>Triage-only design</strong> — The AI provides urgency levels (Green/Amber/Red) and recommendations, never prescriptions or diagnoses</li>
+</ol>
+<hr>
+<p><strong>Q30. How do you prevent unauthorized access to the Doctor Dashboard?</strong></p>
+<p><strong>A:</strong> The Doctor Dashboard has its own <code>layout.tsx</code> with authentication checks. It verifies that the current user has a <code>role: &#39;doctor&#39;</code> flag. The registration flow for doctors includes a separate &quot;Sign Up as Doctor&quot; path that captures specialty, license number, and hospital affiliation. Patient accounts cannot access doctor routes and vice versa.</p>
+<hr>
+<p><strong>Q31. What happens to patient data if the browser cache is cleared?</strong></p>
+<p><strong>A:</strong> In the current prototype, data is lost if localStorage is cleared — this is a known limitation of the hackathon version. In production, all data would be in a cloud database, and localStorage would only serve as a local cache for offline access. The transition requires changing only the <code>store.ts</code> file, not any UI code.</p>
+<hr>
+<p><strong>Q32. How do you handle cross-site scripting (XSS) attacks?</strong></p>
+<p><strong>A:</strong> React&#39;s JSX automatically escapes all rendered content, preventing XSS by default. We do not use <code>dangerouslySetInnerHTML</code> anywhere in the codebase. All user inputs (chat messages, ABHA IDs, report text) are passed as string values, never injected as HTML.</p>
+<hr>
+<p><strong>Q33. How do you protect the AI from prompt injection attacks?</strong></p>
+<p><strong>A:</strong> Our system prompts are server-side only and include strict output format requirements (JSON schema). Even if a malicious user tries to inject instructions via chat, the AI is constrained to respond only within the defined JSON structure (e.g., <code>{ &quot;response&quot;: &quot;...&quot;, &quot;status&quot;: &quot;IN_PROGRESS&quot;, &quot;redFlagDetected&quot;: false }</code>). Any response that doesn&#39;t match the expected schema is caught by our JSON parsing fallback.</p>
+<hr>
+<p><strong>Q34. Is the ABHA data in your system real?</strong></p>
+<p><strong>A:</strong> No. Our ABHA database contains 50 completely synthetic/mock patient records generated algorithmically. No real patient data is used anywhere in the system. The ABHA IDs follow the standard format (<code>91-XXXX-XXXX-XXXX</code>) but are fictional. In production, we would integrate with the real ABDM Health Information Exchange (HIE) APIs.</p>
+<hr>
+<p><strong>Q35. How would you handle multi-hospital deployments securely?</strong></p>
+<p><strong>A:</strong> Each hospital would get its own tenant in a multi-tenant architecture:</p>
+<ol>
+<li><strong>Database isolation</strong> — Separate schemas or databases per hospital</li>
+<li><strong>API key management</strong> — Each hospital gets unique API credentials</li>
+<li><strong>Network segmentation</strong> — Hospital data stays within their VPC</li>
+<li><strong>SSO integration</strong> — Doctors authenticate via their hospital&#39;s existing identity provider</li>
+</ol>
+<hr>
+<h1>SECTION D: USP &amp; INNOVATION (Q36–Q50)</h1>
+<hr>
+<p><strong>Q36. What is the USP of HealthSync?</strong></p>
+<p><strong>A:</strong> &quot;Visually intuitive, AI-driven healthcare accessibility.&quot; We remove the medical literacy barrier. Our three-pillar USP:</p>
+<ol>
+<li><strong>3D Digital Twin</strong> — Patients visually interact with a body model to pinpoint symptoms instead of typing complex medical terms</li>
+<li><strong>AI Report Demystification</strong> — Lab reports are converted from medical jargon to simple language, with Jan Aushadhi (generic) medicine alternatives</li>
+<li><strong>MediKiosk</strong> — A self-service clinical intake system for hospital waiting rooms that can work without a doctor present</li>
+</ol>
+<hr>
+<p><strong>Q37. How is HealthSync different from Practo, 1mg, or other health apps?</strong></p>
+<p><strong>A:</strong> Existing apps are digital forms and video call wrappers. HealthSync fundamentally changes HOW patients interact with healthcare:</p>
+<ul>
+<li><strong>Practo</strong> — Primarily a doctor discovery and appointment booking platform. No AI intake, no report analysis, no 3D visualization.</li>
+<li><strong>1mg</strong> — An online pharmacy with basic symptom checkers. No structured clinical intake, no doctor dashboard integration.</li>
+<li><strong>HealthSync</strong> — An end-to-end ecosystem: Patient AI intake → Structured clinical data → Doctor dashboard → Hospital administration → Blood bank → AYUSH ministry — all connected in one platform.</li>
+</ul>
+<hr>
+<p><strong>Q38. What makes the MediKiosk unique?</strong></p>
+<p><strong>A:</strong> The MediKiosk is designed for Indian hospital waiting rooms where:</p>
+<ul>
+<li>Patients wait 2-4 hours before seeing a doctor</li>
+<li>Patients struggle to articulate symptoms in medical terminology</li>
+<li>Doctors spend 60% of consultation time just gathering basic history</li>
+</ul>
+<p>Our Kiosk solves all three problems. While the patient waits, the AI conducts a structured SOCRATES-based clinical intake via voice. By the time the doctor sees them, a complete Clinical Intake Summary is ready — saving 10-15 minutes per consultation. Multiply that by 100 patients/day = 25 extra hours of doctor productivity per day.</p>
+<hr>
+<p><strong>Q39. How does the Jan Aushadhi feature work?</strong></p>
+<p><strong>A:</strong> When the AI analyzes a medical report and finds prescribed medicines, it automatically suggests generic alternatives available at Jan Aushadhi Kendras (government-run generic medicine stores). For example, if the report shows &quot;Tab Crestor 10mg (₹850/month)&quot;, the AI suggests &quot;Generic Rosuvastatin 10mg (₹45/month) available at Jan Aushadhi Kendra.&quot; This directly addresses the socio-economic aspect of healthcare accessibility.</p>
+<hr>
+<p><strong>Q40. Why did you build a 3D model instead of using a simple body diagram?</strong></p>
+<p><strong>A:</strong> A 2D diagram is static and cannot show:</p>
+<ol>
+<li><strong>Depth</strong> — Back pain vs. chest pain requires rotating the model</li>
+<li><strong>Interactive feedback</strong> — Our model pulses and changes color in real-time based on selected severity</li>
+<li><strong>Engagement</strong> — The holographic look creates a &quot;wow&quot; factor that makes patients want to interact with it, reducing the barrier to reporting symptoms</li>
+<li><strong>Extensibility</strong> — We can add organ-level zoom, X-ray overlay views, and AR integration in the future</li>
+</ol>
+<hr>
+<p><strong>Q41. How does the Emergency SOS system work?</strong></p>
+<p><strong>A:</strong> The Emergency page provides one-tap access to:</p>
+<ol>
+<li><strong>Ambulance booking</strong> — Dispatches based on user&#39;s location</li>
+<li><strong>Hospital calling</strong> — Connects to the nearest emergency room</li>
+<li><strong>Family alerting</strong> — Sends emergency notifications to registered family members</li>
+<li><strong>Blood request</strong> — Sends urgent blood type requests to the Blood Bank Portal</li>
+<li><strong>Bed booking</strong> — Reserves ICU/Ward/General beds at the nearest hospital</li>
+<li><strong>Machine booking</strong> — Requests MRI, CT Scanner, X-Ray, or Ultrasound slots</li>
+</ol>
+<p>Each action generates a cross-portal request that appears in the Hospital Administration Portal for immediate processing.</p>
+<hr>
+<p><strong>Q42. How does the recovery journey system work?</strong></p>
+<p><strong>A:</strong> After a report analysis, the AI can generate a complete Recovery Journey containing:</p>
+<ul>
+<li><strong>Timeline</strong> — Day-by-day recovery steps (checkups, medication changes, exercises, lifestyle modifications)</li>
+<li><strong>Medication schedule</strong> — With dosage, frequency, and time-based reminders</li>
+<li><strong>Diet plan</strong> — Personalized Indian dietary recommendations (Breakfast/Lunch/Snack/Dinner) with calorie counts</li>
+<li><strong>Progress tracking</strong> — Each step can be marked as pending/in-progress/completed</li>
+<li><strong>Doctor notes</strong> — The assigned doctor can add clinical notes and modify the plan</li>
+</ul>
+<hr>
+<p><strong>Q43. Can the system work in multiple languages?</strong></p>
+<p><strong>A:</strong> Yes. We have built a translation system (<code>translations.ts</code>) with <code>LanguageProvider</code> context that supports English and Hindi. All navigation labels, button text, and system messages go through the <code>t()</code> translation function. The Voice AI also supports both <code>en-IN</code> and <code>hi-IN</code> locales for speech recognition and text-to-speech.</p>
+<hr>
+<p><strong>Q44. How does the Doctor Dashboard add value?</strong></p>
+<p><strong>A:</strong> The Doctor Dashboard provides:</p>
+<ol>
+<li><strong>Pre-visit intelligence</strong> — Before the patient walks in, the doctor sees their complete AI-generated intake summary, uploaded reports, vitals history, and active medications</li>
+<li><strong>Structured data</strong> — Instead of handwritten notes, doctors get machine-readable JSON with Chief Complaint, HPI (SOCRATES), Past Medical History, Drug/Allergy History, and Review of Systems</li>
+<li><strong>Quick prescriptions</strong> — Doctors can write digital prescriptions that automatically appear in the patient&#39;s app</li>
+<li><strong>Patient management</strong> — A centralized list of all assigned patients with their triage levels</li>
+</ol>
+<hr>
+<p><strong>Q45. What is unique about your report analysis compared to Google Health or similar tools?</strong></p>
+<p><strong>A:</strong> Three things:</p>
+<ol>
+<li><strong>Fake report detection</strong> — Our AI flags non-genuine reports (gibberish, lorem ipsum, non-medical content) with <code>isFake: true</code></li>
+<li><strong>Dual summary</strong> — We generate BOTH a layman summary (for the patient) and a technical summary (for the doctor) from the same report</li>
+<li><strong>Actionable output</strong> — We don&#39;t just summarize; we generate urgency levels, specialist recommendations, follow-up tests, AND a complete recovery journey — all from a single report upload</li>
+</ol>
+<hr>
+<p><strong>Q46. How does the Blood Bank Portal work?</strong></p>
+<p><strong>A:</strong> The Blood Bank Portal shows:</p>
+<ul>
+<li><strong>Live inventory</strong> — Real-time counts of all 8 blood types (A±, B±, O±, AB±) with location information</li>
+<li><strong>Critical alerts</strong> — Types with fewer than 10 units are highlighted in red</li>
+<li><strong>Emergency requests</strong> — When a patient uses the Emergency SOS to request blood, it appears as a real-time notification in the Blood Bank Portal</li>
+<li><strong>Stock management</strong> — Administrators can edit inventory counts (add/remove units)</li>
+</ul>
+<hr>
+<p><strong>Q47. How does the Hospital Administration Portal work?</strong></p>
+<p><strong>A:</strong> The Hospital Portal provides:</p>
+<ul>
+<li><strong>Room availability</strong> — ICU, Normal Ward, General Ward with occupancy percentages and visual progress bars</li>
+<li><strong>Machine status</strong> — MRI, CT Scanner, X-Ray, Ultrasound availability tracking</li>
+<li><strong>Bed requests</strong> — Emergency bed booking requests from patients</li>
+<li><strong>Pharmacy orders</strong> — Medicine order processing and status management</li>
+<li><strong>Doctor roster</strong> — All active doctors with their specialties and current availability</li>
+</ul>
+<hr>
+<p><strong>Q48. What is the Admin Command Center?</strong></p>
+<p><strong>A:</strong> The Admin Command Center (<code>/admin</code>) provides a god-view of the entire ecosystem:</p>
+<ul>
+<li>ABHA Network statistics (registered patients)</li>
+<li>MediKiosk logs (total AI intake summaries generated)</li>
+<li>Blood Bank total units</li>
+<li>Hospital occupancy percentage</li>
+<li>System health monitor — showing ONLINE/OFFLINE status of all subsystems (ABHA API, MediKiosk Voice Processing, Blood Bank DB, Hospital Management System)</li>
+</ul>
+<hr>
+<p><strong>Q49. How does cross-portal data flow work?</strong></p>
+<p><strong>A:</strong> HealthSync is a connected ecosystem, not isolated modules:</p>
+<pre><code>Patient (Emergency SOS) → Blood Bank (receives blood request)
+Patient (Emergency SOS) → Hospital (receives bed/machine request)
+Patient (MediKiosk Intake) → Doctor Dashboard (receives clinical summary)
+Patient (Report Upload) → Doctor Dashboard (auto-shared report)
+Patient (Medicine Order) → Hospital Pharmacy (receives order)
+Doctor (Prescription) → Patient App (receives prescription)
+AYUSH Doctor (Consultation) → Ayush Dashboard (aggregated analytics)
+</code></pre>
+<hr>
+<p><strong>Q50. What makes your AI intake different from a simple chatbot?</strong></p>
+<p><strong>A:</strong> Our AI is clinically trained to follow the SOCRATES framework used by real doctors:</p>
+<ul>
+<li><strong>S</strong>ite — Where exactly is the problem?</li>
+<li><strong>O</strong>nset — When did it start?</li>
+<li><strong>C</strong>haracter — What does it feel like?</li>
+<li><strong>R</strong>adiation — Does it spread anywhere?</li>
+<li><strong>A</strong>ssociated symptoms — Any other symptoms?</li>
+<li><strong>T</strong>ime course — Is it getting better or worse?</li>
+<li><strong>E</strong>xacerbating/relieving factors — What makes it better or worse?</li>
+<li><strong>S</strong>everity — On a scale of 1-10?</li>
+</ul>
+<p>It asks ONE question at a time, detects red-flag emergencies, and produces a medically structured output — not a casual chat transcript.</p>
+<hr>
+<h1>SECTION E: GOVERNMENT TERMS &amp; AYUSH/ABHA INTEGRATION (Q51–Q70)</h1>
+<hr>
+<p><strong>Q51. What is ABHA?</strong></p>
+<p><strong>A:</strong> ABHA stands for <strong>Ayushman Bharat Health Account</strong>. It is a 14-digit unique health ID issued by the Government of India under the Ayushman Bharat Digital Mission (ABDM). It serves as a universal health identifier that links all of a patient&#39;s health records across hospitals, clinics, and diagnostic centers. In our app, patients enter their ABHA ID at the MediKiosk to pull their pre-existing medical history.</p>
+<hr>
+<p><strong>Q52. What is ABDM?</strong></p>
+<p><strong>A:</strong> ABDM stands for <strong>Ayushman Bharat Digital Mission</strong>. It is the Government of India&#39;s flagship initiative to create a unified digital health infrastructure. It includes:</p>
+<ol>
+<li><strong>ABHA</strong> — Health Account (unique ID)</li>
+<li><strong>Health Information Exchange (HIE)</strong> — For sharing records between providers</li>
+<li><strong>Health Facility Registry (HFR)</strong> — Database of all registered healthcare facilities</li>
+<li><strong>Healthcare Professionals Registry (HPR)</strong> — Database of all registered healthcare providers</li>
+<li><strong>Unified Health Interface (UHI)</strong> — Open protocol for health services</li>
+</ol>
+<p>Our app integrates with the ABHA component and simulates the HIE for seamless data exchange.</p>
+<hr>
+<p><strong>Q53. What is AYUSH?</strong></p>
+<p><strong>A:</strong> AYUSH stands for <strong>Ayurveda, Yoga &amp; Naturopathy, Unani, Siddha, and Homeopathy</strong>. It is the Ministry of AYUSH under the Government of India that promotes and regulates traditional Indian medicine systems. In HealthSync, we have:</p>
+<ol>
+<li><strong>AYUSH consultation type</strong> in the MediKiosk — When selected, the AI also assesses Prakriti, Vikriti, Agni, and Ahara-Vihara</li>
+<li><strong>Ayurvedic doctors</strong> on the platform — With specialties like Panchakarma, Ayurvedic Physician, etc.</li>
+<li><strong>Ayush Ministry Dashboard</strong> — An admin portal showing consultations, medicine inventory, and active Vaidyas</li>
+</ol>
+<hr>
+<p><strong>Q54. What is Prakriti?</strong></p>
+<p><strong>A:</strong> Prakriti refers to a person&#39;s <strong>innate body constitution</strong> in Ayurveda. It is determined at birth and remains constant throughout life. There are three main doshas:</p>
+<ol>
+<li><strong>Vata</strong> — Air + Space (thin build, creative, anxious)</li>
+<li><strong>Pitta</strong> — Fire + Water (medium build, sharp intellect, prone to inflammation)</li>
+<li><strong>Kapha</strong> — Earth + Water (heavy build, calm, prone to congestion)</li>
+</ol>
+<p>Most people are a combination (e.g., Vata-Pitta). In our app, when AYUSH consultation is selected, the AI assesses the patient&#39;s Prakriti through targeted questions about body type, digestion, sleep patterns, and temperament.</p>
+<hr>
+<p><strong>Q55. What is Vikriti?</strong></p>
+<p><strong>A:</strong> Vikriti refers to the <strong>current state of imbalance</strong> of the doshas. While Prakriti is your natural constitution, Vikriti tells you which dosha is currently aggravated. For example, a Vata-Pitta person might have Pitta Vikriti (Pitta is currently elevated) due to stress, spicy food, or hot weather. Our AI assesses Vikriti by asking about current symptoms, recent dietary changes, and lifestyle factors.</p>
+<hr>
+<p><strong>Q56. What is Agni in Ayurveda?</strong></p>
+<p><strong>A:</strong> Agni is the <strong>digestive fire</strong> in Ayurveda. It governs digestion, metabolism, and the body&#39;s ability to process food and experiences. There are four types:</p>
+<ol>
+<li><strong>Sama Agni</strong> — Balanced digestion (healthy)</li>
+<li><strong>Vishama Agni</strong> — Irregular digestion (Vata imbalance)</li>
+<li><strong>Tikshna Agni</strong> — Hyperactive digestion (Pitta imbalance)</li>
+<li><strong>Manda Agni</strong> — Slow digestion (Kapha imbalance)</li>
+</ol>
+<p>Our AI assesses Agni by asking about appetite patterns, digestion quality, bloating, and bowel habits.</p>
+<hr>
+<p><strong>Q57. What is Ahara-Vihara?</strong></p>
+<p><strong>A:</strong> Ahara-Vihara means <strong>diet and lifestyle</strong>:</p>
+<ul>
+<li><strong>Ahara</strong> (Diet) — What you eat, when you eat, how you eat</li>
+<li><strong>Vihara</strong> (Lifestyle) — Sleep patterns, exercise habits, daily routine, stress levels</li>
+</ul>
+<p>In Ayurveda, Ahara-Vihara is considered the primary cause of most diseases. Our AI captures this information to provide personalized dietary and lifestyle recommendations based on the patient&#39;s Prakriti and current Vikriti.</p>
+<hr>
+<p><strong>Q58. What is Panchakarma?</strong></p>
+<p><strong>A:</strong> Panchakarma is a set of five Ayurvedic detoxification therapies:</p>
+<ol>
+<li><strong>Vamana</strong> — Therapeutic vomiting (for Kapha disorders)</li>
+<li><strong>Virechana</strong> — Purgation therapy (for Pitta disorders)</li>
+<li><strong>Basti</strong> — Medicated enema (for Vata disorders)</li>
+<li><strong>Nasya</strong> — Nasal medication (for head/neck disorders)</li>
+<li><strong>Raktamokshana</strong> — Blood purification</li>
+</ol>
+<p>We have a Panchakarma Specialist (Dr. Smita Naram) on our platform, and the Ayush Dashboard tracks all Panchakarma-related consultations.</p>
+<hr>
+<p><strong>Q59. What is the National AYUSH Mission (NAM)?</strong></p>
+<p><strong>A:</strong> NAM is a Government of India centrally sponsored scheme for promoting AYUSH systems through:</p>
+<ul>
+<li>Cost-effective AYUSH services</li>
+<li>Strengthening educational institutions</li>
+<li>Quality control of AYUSH drugs</li>
+<li>Medicinal plant cultivation</li>
+</ul>
+<p>Our Ayush Ministry Dashboard supports NAM objectives by providing digital tracking of Ayurvedic consultations, medicine dispensation, and practitioner activity.</p>
+<hr>
+<p><strong>Q60. How do you integrate AYUSH with Allopathic treatment in your app?</strong></p>
+<p><strong>A:</strong> We use a <strong>unified doctor listing</strong> that includes both Allopathic and Ayurvedic practitioners:</p>
+<ul>
+<li>18 Allopathic doctors (Cardiologist, Nephrologist, Neurologist, etc.)</li>
+<li>5 Ayurvedic/AYUSH doctors (Ayurvedic Physician, Panchakarma Specialist, Homeopath, etc.)</li>
+<li>2 Homeopathic practitioners</li>
+</ul>
+<p>Patients can choose their consultation type at the MediKiosk. If they choose AYUSH, the AI intake additionally assesses Prakriti, Vikriti, Agni, and Ahara-Vihara. The same Clinical Intake Summary is shared with the assigned AYUSH doctor through the Doctor Dashboard.</p>
+<hr>
+<p><strong>Q61. What are Jan Aushadhi Kendras?</strong></p>
+<p><strong>A:</strong> Pradhan Mantri Bhartiya Janaushadhi Pariyojana (PMBJP) is a government campaign to provide quality generic medicines at affordable prices through dedicated stores called Jan Aushadhi Kendras. These stores sell medicines at 50-90% less than branded equivalents. Our AI report analysis automatically suggests Jan Aushadhi alternatives for every branded medicine found in reports.</p>
+<hr>
+<p><strong>Q62. What is the SOCRATES framework mentioned in your app?</strong></p>
+<p><strong>A:</strong> SOCRATES is a clinical mnemonic used by doctors worldwide to take a structured history of a presenting complaint:</p>
+<ul>
+<li><strong>S</strong> — Site (Where is the problem?)</li>
+<li><strong>O</strong> — Onset (When did it start? Sudden or gradual?)</li>
+<li><strong>C</strong> — Character (What does the pain/symptom feel like?)</li>
+<li><strong>R</strong> — Radiation (Does it spread to other areas?)</li>
+<li><strong>A</strong> — Associated symptoms (Any other symptoms?)</li>
+<li><strong>T</strong> — Time course (Constant or intermittent? Getting better or worse?)</li>
+<li><strong>E</strong> — Exacerbating/relieving factors (What makes it worse/better?)</li>
+<li><strong>S</strong> — Severity (Scale of 1-10?)</li>
+</ul>
+<p>Our MediKiosk AI follows this framework systematically to ensure no critical information is missed.</p>
+<hr>
+<p><strong>Q63. What is the Ayushman Bharat scheme?</strong></p>
+<p><strong>A:</strong> Ayushman Bharat is the Government of India&#39;s flagship healthcare program with two components:</p>
+<ol>
+<li><strong>Health and Wellness Centers (HWCs)</strong> — 150,000 primary health centers providing free essential services</li>
+<li><strong>Pradhan Mantri Jan Arogya Yojana (PM-JAY)</strong> — Health insurance covering ₹5 lakh per family per year for secondary and tertiary hospitalization</li>
+</ol>
+<p>ABHA (our integrated health ID) is part of the Ayushman Bharat ecosystem.</p>
+<hr>
+<p><strong>Q64. How does your Ayush Dashboard help the Ministry?</strong></p>
+<p><strong>A:</strong> The Ayush Ministry Dashboard provides:</p>
+<ol>
+<li><strong>Total consultations</strong> — Aggregate count of all AYUSH-type doctor visits</li>
+<li><strong>Medicine dispensation</strong> — How many units of Ayurvedic medicines (Ashwagandha, Triphala, Giloy, Brahmi, Chyawanprash) were dispensed</li>
+<li><strong>Active Vaidyas</strong> — Number of Ayurvedic practitioners actively seeing patients</li>
+<li><strong>Inventory management</strong> — Real-time stock tracking with price information</li>
+<li><strong>Consultation timeline</strong> — Chronological view of all AYUSH appointments</li>
+</ol>
+<hr>
+<p><strong>Q65. What Ayurvedic medicines does your platform track?</strong></p>
+<p><strong>A:</strong> Our Ayush Dashboard tracks five key Ayurvedic medicines:</p>
+<ol>
+<li><strong>Ashwagandha</strong> — Adaptogenic herb for stress and immunity (₹80)</li>
+<li><strong>Triphala Churna</strong> — Digestive health formulation (₹60)</li>
+<li><strong>Giloy Ghanvati</strong> — Immunity booster (₹70)</li>
+<li><strong>Brahmi Vati</strong> — Brain and memory tonic (₹90)</li>
+<li><strong>Chyawanprash</strong> — General health supplement (₹150)</li>
+</ol>
+<hr>
+<p><strong>Q66. What is Vaidya?</strong></p>
+<p><strong>A:</strong> Vaidya is the Sanskrit term for a practitioner of Ayurvedic medicine, equivalent to &quot;Doctor&quot; in Allopathic medicine. Our platform lists Vaidyas (Ayurvedic doctors) alongside Allopathic doctors, allowing patients to choose their preferred system of medicine.</p>
+<hr>
+<p><strong>Q67. How do you handle the ABHA ID format?</strong></p>
+<p><strong>A:</strong> The ABHA ID follows the government-specified 14-digit format: <code>XX-XXXX-XXXX-XXXX</code>. In our system, we use the format <code>91-0000-0000-XXXX</code> for the mock database. The <code>91</code> prefix represents the India country code. In production, ABHA IDs would be fetched from the ABDM APIs using the patient&#39;s Aadhaar or mobile number.</p>
+<hr>
+<p><strong>Q68. What is HWC in the context of your app?</strong></p>
+<p><strong>A:</strong> Health and Wellness Centers (HWCs) are the primary care delivery points under Ayushman Bharat. Our MediKiosk is specifically designed to be deployed at HWCs in rural areas where:</p>
+<ul>
+<li>There may not be a full-time doctor present</li>
+<li>Patients have low medical literacy</li>
+<li>Internet connectivity may be limited</li>
+</ul>
+<p>The Kiosk can conduct an AI-driven intake, produce a clinical summary, and transmit it to a remote doctor for teleconsultation.</p>
+<hr>
+<p><strong>Q69. How does your platform support the Digital Health ID initiative?</strong></p>
+<p><strong>A:</strong> Our platform is built around the ABHA ecosystem:</p>
+<ol>
+<li><strong>Registration</strong> — Patients can enter their ABHA ID during kiosk intake</li>
+<li><strong>Record linking</strong> — The ABHA ID links their pre-existing medical records to the current visit</li>
+<li><strong>Cross-facility sharing</strong> — Reports shared with doctors carry the ABHA ID for universal identification</li>
+<li><strong>Government portal</strong> — The <code>/abha/gov</code> route simulates the national ABHA registry where government officials can search and view all registered health accounts</li>
+</ol>
+<hr>
+<p><strong>Q70. What government APIs would you integrate with in production?</strong></p>
+<p><strong>A:</strong> We would integrate with:</p>
+<ol>
+<li><strong>ABDM Gateway</strong> — For ABHA ID verification and consent-based health record exchange</li>
+<li><strong>Health Facility Registry (HFR) API</strong> — To fetch real hospital and clinic data</li>
+<li><strong>Healthcare Professionals Registry (HPR) API</strong> — To verify doctor credentials</li>
+<li><strong>CoWIN/ABHA API</strong> — For vaccination records</li>
+<li><strong>PM-JAY API</strong> — To check patient eligibility for government insurance</li>
+<li><strong>E-Sanjeevani API</strong> — For teleconsultation integration</li>
+</ol>
+<hr>
+<h1>SECTION F: PROBLEM STATEMENT &amp; ALIGNMENT (Q71–Q80)</h1>
+<hr>
+<p><strong>Q71. What is your problem statement?</strong></p>
+<p><strong>A:</strong> Our problem statement focuses on <strong>improving healthcare accessibility and efficiency through AI-driven patient intake, medical record analysis, and integrated hospital management</strong>, addressing the critical gap between patient symptom articulation and clinical data requirements.</p>
+<hr>
+<p><strong>Q72. How does your app solve the problem statement?</strong></p>
+<p><strong>A:</strong> We solve it at three levels:</p>
+<ol>
+<li><strong>Patient Level</strong> — AI-driven 3D symptom mapping, voice-enabled kiosk intake, and automated report analysis remove the medical literacy barrier</li>
+<li><strong>Doctor Level</strong> — Pre-structured clinical summaries save 10-15 minutes per patient consultation</li>
+<li><strong>System Level</strong> — Integrated hospital admin, blood bank, and AYUSH dashboards create a unified healthcare ecosystem</li>
+</ol>
+<hr>
+<p><strong>Q73. What specific pain points does HealthSync address?</strong></p>
+<p><strong>A:</strong></p>
+<ol>
+<li><strong>Long waiting times</strong> — Patients spend 2-4 hours waiting. Our Kiosk makes productive use of that time.</li>
+<li><strong>Medical illiteracy</strong> — 65% of India&#39;s population cannot understand medical reports. Our AI translates them to simple language.</li>
+<li><strong>Doctor overload</strong> — Indian doctors see 30-50 patients/day. Pre-structured intake summaries save critical time.</li>
+<li><strong>Medicine costs</strong> — Our Jan Aushadhi feature suggests generic alternatives at 50-90% lower cost.</li>
+<li><strong>Data fragmentation</strong> — Health records are scattered across hospitals. ABHA integration unifies them.</li>
+</ol>
+<hr>
+<p><strong>Q74. Is your solution only for urban hospitals or does it work for rural areas too?</strong></p>
+<p><strong>A:</strong> It is specifically designed for BOTH:</p>
+<ul>
+<li><strong>Urban hospitals</strong> — Full-featured patient app, doctor dashboard, and hospital admin portal</li>
+<li><strong>Rural HWCs/PHCs</strong> — MediKiosk with voice input (for patients who cannot type), Hindi language support, and offline-capable design. The Kiosk can work on a single device with internet and serve an entire village health center.</li>
+</ul>
+<hr>
+<p><strong>Q75. How does your solution compare to the traditional hospital workflow?</strong></p>
+<p><strong>A:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Traditional</th>
+<th>HealthSync</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Registration</td>
+<td>Paper forms, 15-30 min wait</td>
+<td>ABHA ID scan, instant</td>
+</tr>
+<tr>
+<td>History taking</td>
+<td>Doctor asks manually, 10-15 min</td>
+<td>AI Kiosk, done during wait time</td>
+</tr>
+<tr>
+<td>Report analysis</td>
+<td>Doctor reads manually</td>
+<td>AI-analyzed with urgency levels</td>
+</tr>
+<tr>
+<td>Medicine cost</td>
+<td>Branded drugs only</td>
+<td>Jan Aushadhi alternatives suggested</td>
+</tr>
+<tr>
+<td>Follow-up</td>
+<td>Paper prescriptions lost</td>
+<td>Digital recovery journey with reminders</td>
+</tr>
+<tr>
+<td>Data sharing</td>
+<td>Physical file transfer</td>
+<td>Instant digital sharing via ABHA</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>Q76. What is the scalability plan?</strong></p>
+<p><strong>A:</strong> Phase 1 (Current): Single hospital prototype with all features
+Phase 2: Multi-tenant SaaS — Each hospital gets its own instance
+Phase 3: National deployment via ABDM integration — Any ABHA-registered patient can use any HealthSync-enabled facility
+Phase 4: AI model fine-tuning on Indian medical datasets for higher accuracy</p>
+<hr>
+<p><strong>Q77. How does your solution contribute to India&#39;s healthcare infrastructure?</strong></p>
+<p><strong>A:</strong> By digitizing three critical bottlenecks:</p>
+<ol>
+<li><strong>Patient intake</strong> — Converting unstructured symptoms to structured clinical data</li>
+<li><strong>Record management</strong> — Unified digital health records via ABHA</li>
+<li><strong>Resource allocation</strong> — Real-time bed, blood, and machine availability across the hospital network</li>
+</ol>
+<hr>
+<p><strong>Q78. Can your solution reduce healthcare costs?</strong></p>
+<p><strong>A:</strong> Yes, in three ways:</p>
+<ol>
+<li><strong>Jan Aushadhi suggestions</strong> save patients 50-90% on medicine costs</li>
+<li><strong>AI intake</strong> reduces doctor consultation time by 30-40%, allowing more patients per day</li>
+<li><strong>Digital records</strong> eliminate paper, file storage, and manual data entry costs</li>
+</ol>
+<hr>
+<p><strong>Q79. How did you validate the need for this solution?</strong></p>
+<p><strong>A:</strong> India has:</p>
+<ul>
+<li>1 doctor for every 1,457 people (WHO recommends 1:1,000)</li>
+<li>65% of population unable to understand medical reports</li>
+<li>Average OPD waiting time: 2-4 hours</li>
+<li>80% of health expenditure is out-of-pocket</li>
+</ul>
+<p>These statistics validate the critical need for AI-augmented healthcare delivery.</p>
+<hr>
+<p><strong>Q80. What impact metrics would you track?</strong></p>
+<p><strong>A:</strong></p>
+<ol>
+<li><strong>Average intake time</strong> — Target: Reduce from 15 min to 3 min</li>
+<li><strong>Doctor consultation time</strong> — Target: Reduce by 30%</li>
+<li><strong>Patient comprehension</strong> — % who understand their report after AI analysis</li>
+<li><strong>Generic medicine adoption</strong> — % who switch to Jan Aushadhi alternatives</li>
+<li><strong>Emergency response time</strong> — Time from SOS trigger to resource allocation</li>
+</ol>
+<hr>
+<h1>SECTION G: IMPLEMENTATION, DEPLOYMENT &amp; FUTURE (Q81–Q100)</h1>
+<hr>
+<p><strong>Q81. How long did it take to build HealthSync?</strong></p>
+<p><strong>A:</strong> The core prototype was built during the SIH hackathon timeline. We used an iterative approach — starting with the Patient Portal and Digital Twin, then adding the MediKiosk, Doctor Dashboard, and admin portals progressively.</p>
+<hr>
+<p><strong>Q82. How would you deploy this in a real hospital?</strong></p>
+<p><strong>A:</strong> Deployment would involve:</p>
+<ol>
+<li><strong>Cloud hosting</strong> — Deploy on AWS/GCP/Azure with auto-scaling</li>
+<li><strong>Database setup</strong> — PostgreSQL with Prisma ORM for relational data</li>
+<li><strong>ABDM integration</strong> — Register as a Health Information Provider (HIP) with ABDM</li>
+<li><strong>Kiosk hardware</strong> — Touch-screen terminals in hospital waiting areas</li>
+<li><strong>Training</strong> — Staff training for admin portals (Hospital, Blood Bank, AYUSH)</li>
+</ol>
+<hr>
+<p><strong>Q83. What is the minimum hardware needed for the MediKiosk?</strong></p>
+<p><strong>A:</strong> The MediKiosk runs in a web browser, so it needs:</p>
+<ul>
+<li>Any device with a modern browser (Chrome, Safari, Edge)</li>
+<li>Microphone (for voice input)</li>
+<li>Internet connection (4G/WiFi)</li>
+<li>Optional: Touchscreen for easier interaction</li>
+</ul>
+<p>Even a ₹15,000 Android tablet with a microphone can serve as a MediKiosk.</p>
+<hr>
+<p><strong>Q84. How does the system handle poor internet connectivity?</strong></p>
+<p><strong>A:</strong> Several optimizations:</p>
+<ol>
+<li><strong>Lightweight frontend</strong> — Optimized bundle size with tree-shaking</li>
+<li><strong>API efficiency</strong> — AI responses are limited to 1024-2048 tokens to minimize data transfer</li>
+<li><strong>Progressive Web App potential</strong> — Can be converted to a PWA for offline caching of static assets</li>
+<li><strong>Graceful degradation</strong> — If AI fails, the system falls back to a basic form-based intake</li>
+</ol>
+<hr>
+<p><strong>Q85. Can this work as a mobile app?</strong></p>
+<p><strong>A:</strong> Yes. Since it is built with responsive web design:</p>
+<ol>
+<li><strong>Immediate</strong> — It already works on mobile browsers with our responsive CSS</li>
+<li><strong>PWA</strong> — Can be installed as a Progressive Web App on any phone</li>
+<li><strong>Native wrapper</strong> — Can be wrapped with Capacitor or React Native Web for app store distribution</li>
+</ol>
+<hr>
+<p><strong>Q86. How do you handle concurrent users?</strong></p>
+<p><strong>A:</strong> In the current prototype, each user session is independent (localStorage is per-browser). For production:</p>
+<ol>
+<li><strong>Stateless API routes</strong> — Next.js API routes are stateless and can handle concurrent requests</li>
+<li><strong>Database connection pooling</strong> — Using PgBouncer or Prisma&#39;s connection pool</li>
+<li><strong>CDN caching</strong> — Static assets served via CloudFront/Vercel Edge</li>
+<li><strong>Load balancing</strong> — Horizontal scaling behind a load balancer</li>
+</ol>
+<hr>
+<p><strong>Q87. What is the cost of running HealthSync?</strong></p>
+<p><strong>A:</strong> For a single hospital:</p>
+<ul>
+<li><strong>Hosting</strong> — ₹3,000-5,000/month (Vercel Pro or AWS)</li>
+<li><strong>AI API</strong> — ₹5,000-10,000/month (Groq API based on usage)</li>
+<li><strong>Database</strong> — ₹2,000-3,000/month (managed PostgreSQL)</li>
+<li><strong>Total</strong> — ₹10,000-18,000/month — less than hiring one additional clerk</li>
+</ul>
+<hr>
+<p><strong>Q88. How do you plan to add more AI features in the future?</strong></p>
+<p><strong>A:</strong> Planned AI enhancements:</p>
+<ol>
+<li><strong>Predictive health alerts</strong> — Analyze vitals trends to predict potential issues before they occur</li>
+<li><strong>Drug interaction checker</strong> — Flag dangerous medication combinations</li>
+<li><strong>Medical image analysis</strong> — Integrate vision models for X-ray, MRI, and CT scan analysis directly</li>
+<li><strong>Multilingual AI</strong> — Support for 10+ Indian languages beyond English and Hindi</li>
+<li><strong>Fine-tuned medical model</strong> — Train on Indian medical datasets for culturally appropriate responses</li>
+</ol>
+<hr>
+<p><strong>Q89. How would you monetize HealthSync?</strong></p>
+<p><strong>A:</strong> B2B SaaS model:</p>
+<ol>
+<li><strong>Hospital subscription</strong> — Monthly fee per hospital for the full platform</li>
+<li><strong>Per-kiosk licensing</strong> — Fee per deployed MediKiosk terminal</li>
+<li><strong>API marketplace</strong> — Charge third-party health apps for accessing our AI intake API</li>
+<li><strong>Government contracts</strong> — Deploy at government hospitals under PPP (Public-Private Partnership) models</li>
+</ol>
+<hr>
+<p><strong>Q90. What testing have you done?</strong></p>
+<p><strong>A:</strong> Testing at multiple levels:</p>
+<ol>
+<li><strong>End-to-end flows</strong> — Complete patient journey from registration → kiosk intake → report upload → doctor review</li>
+<li><strong>AI output validation</strong> — Verified JSON parsing with fallback extraction for every AI route</li>
+<li><strong>API resilience</strong> — Dual-key failover system tested with intentionally invalid keys</li>
+<li><strong>Cross-portal data flow</strong> — Verified that Emergency SOS requests appear in Hospital and Blood Bank portals</li>
+<li><strong>Voice input</strong> — Tested speech recognition in both English and Hindi</li>
+</ol>
+<hr>
+<p><strong>Q91. What are the known limitations?</strong></p>
+<p><strong>A:</strong></p>
+<ol>
+<li><strong>OCR accuracy</strong> — Tesseract struggles with handwritten prescriptions; works well with printed reports</li>
+<li><strong>LocalStorage cap</strong> — 5MB limit per origin (resolved by production database migration)</li>
+<li><strong>Browser dependency</strong> — Speech Recognition requires Chrome or Safari</li>
+<li><strong>AI hallucination</strong> — LLMs can occasionally generate incorrect medical correlations; mitigated by strict prompt engineering and &quot;not a diagnosis&quot; disclaimers</li>
+</ol>
+<hr>
+<p><strong>Q92. How do you handle AI hallucinations in a medical context?</strong></p>
+<p><strong>A:</strong> Five-layer defense:</p>
+<ol>
+<li><strong>System prompt constraints</strong> — &quot;NEVER diagnose. Use &#39;may suggest&#39; language&quot;</li>
+<li><strong>Structured JSON output</strong> — Forces the AI to fill specific fields rather than free-form text</li>
+<li><strong>Temperature control</strong> — Set to 0.2-0.3 (low creativity, high factuality) for all medical routes</li>
+<li><strong>Output validation</strong> — JSON parsing with schema checks catches malformed responses</li>
+<li><strong>Human-in-the-loop</strong> — Every AI analysis includes &quot;Must be verified by a qualified healthcare provider&quot;</li>
+</ol>
+<hr>
+<p><strong>Q93. How do you handle patients who don&#39;t have an ABHA ID?</strong></p>
+<p><strong>A:</strong> ABHA ID is optional. If a patient doesn&#39;t enter one at the MediKiosk, the AI simply starts from scratch: &quot;Hello! Could you please tell me what brings you to the hospital today?&quot; The intake process works identically — the only difference is that the AI won&#39;t have pre-existing medical history context.</p>
+<hr>
+<p><strong>Q94. Can doctors modify the AI-generated intake summary?</strong></p>
+<p><strong>A:</strong> Yes. The Doctor Dashboard displays the full AI-generated Clinical Intake Summary, and doctors can add their own clinical notes, modify the triage level, and update the assessment. The AI summary is a starting point, not the final record.</p>
+<hr>
+<p><strong>Q95. How does the medicine ordering system work?</strong></p>
+<p><strong>A:</strong> Patients can browse medicines in the Medicines section, filter by category (Allopathic, Ayurvedic, OTC), add to cart, and place orders. Orders include delivery address, payment method selection, and order tracking. These orders appear in the Hospital Pharmacy section of the Hospital Administration Portal for processing and dispatch.</p>
+<hr>
+<p><strong>Q96. What accessibility features does HealthSync have?</strong></p>
+<p><strong>A:</strong></p>
+<ol>
+<li><strong>Voice input</strong> — For patients who cannot type</li>
+<li><strong>Text-to-speech</strong> — AI reads responses aloud for visually impaired users</li>
+<li><strong>Large touch targets</strong> — Sidebar icons are 32px with 600-weight font labels</li>
+<li><strong>High contrast</strong> — Dark theme with carefully chosen color contrasts</li>
+<li><strong>Hindi support</strong> — For non-English speaking users</li>
+<li><strong>Simple language</strong> — AI generates layman summaries specifically to aid low-literacy users</li>
+</ol>
+<hr>
+<p><strong>Q97. How does the notification system work?</strong></p>
+<p><strong>A:</strong> The sidebar shows a notification badge with unread count. Notifications are generated for:</p>
+<ul>
+<li>New report analysis completed</li>
+<li>Appointment confirmation</li>
+<li>Medication reminders</li>
+<li>Emergency alerts</li>
+<li>Doctor&#39;s notes added to recovery journey</li>
+</ul>
+<hr>
+<p><strong>Q98. What is the onboarding flow for new users?</strong></p>
+<p><strong>A:</strong> New users go through:</p>
+<ol>
+<li><strong>Registration</strong> — Name, email, password, age, phone number</li>
+<li><strong>Onboarding</strong> — Medical conditions, blood group, allergies, emergency contacts</li>
+<li><strong>Theme selection</strong> — Light/dark mode preference</li>
+<li><strong>Dashboard</strong> — Full access to all features</li>
+</ol>
+<hr>
+<p><strong>Q99. How would you demonstrate the complete flow in 5 minutes?</strong></p>
+<p><strong>A:</strong> Recommended demo flow:</p>
+<ol>
+<li><strong>[30s]</strong> Show the landing page and registration</li>
+<li><strong>[60s]</strong> Open the MediKiosk — enter ABHA ID, speak symptoms via voice, show AI asking SOCRATES questions</li>
+<li><strong>[60s]</strong> Show the Clinical Intake Summary auto-generated and appearing on the Doctor Dashboard</li>
+<li><strong>[45s]</strong> Upload a medical report — show the AI analysis with layman summary, abnormalities, and Jan Aushadhi alternatives</li>
+<li><strong>[45s]</strong> Open the 3D Digital Twin — click body parts, chat with AI about symptoms</li>
+<li><strong>[30s]</strong> Show the Emergency SOS → Blood Bank and Hospital portals receiving the request</li>
+<li><strong>[30s]</strong> Show the Ayush Dashboard and Admin Command Center</li>
+</ol>
+<hr>
+<p><strong>Q100. What is your vision for HealthSync in 5 years?</strong></p>
+<p><strong>A:</strong> HealthSync will evolve from a hospital-level tool to a national healthcare infrastructure layer:</p>
+<ol>
+<li><strong>Year 1</strong> — Deploy in 100 hospitals across India via government partnerships</li>
+<li><strong>Year 2</strong> — Integrate with all ABDM APIs for true nationwide health record portability</li>
+<li><strong>Year 3</strong> — Launch AI-powered predictive health analytics (predicting disease risk from vitals trends)</li>
+<li><strong>Year 4</strong> — Expand to 10+ Indian languages and deploy in all 150,000 HWCs</li>
+<li><strong>Year 5</strong> — Become the default digital intake and record management system for Ayushman Bharat, serving 500 million Indians</li>
+</ol>
+<hr>
+<p><em>This document was prepared for the Smart India Hackathon Round 2 defense.</em>
+<em>Team HealthSync — September 2026</em></p>
+
+</body>
+</html>

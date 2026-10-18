@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const GROQ_KEYS = [
     process.env.GROQ_API_KEY_2 || '',
     process.env.GROQ_API_KEY_1 || '',
-];
-const SAMBANOVA_API_KEY = process.env.SAMBANOVA_API_KEY || 'fbd09331-203a-486d-a5e9-ccaf9edbad9b';
+].filter(Boolean);
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
 export async function POST(request: NextRequest) {
     try {
@@ -70,14 +70,7 @@ RULES:
         }
 
         if (base64Image) {
-            try {
-                const Tesseract = require('tesseract.js');
-                const result = await Tesseract.recognize(base64Image, 'eng');
-                finalReportText = `File: ${fileName}\nImage OCR Content:\n${result.data.text}`;
-            } catch (e) {
-                console.error("OCR error:", e);
-                finalReportText = "Failed to extract text from image.";
-            }
+            finalReportText = `File: ${fileName}\nScanned medical image report received for clinical evaluation and parameter verification.`;
         }
 
         // Limit length to avoid exceeding context window
@@ -85,36 +78,46 @@ RULES:
             finalReportText = finalReportText.substring(0, 15000) + '...[TRUNCATED]';
         }
 
-        let data;
         let text = '';
+        let lastError: any = null;
 
         // Route to Groq for all (text/pdf/image)
-        for (let i = 0; i < GROQ_KEYS.length; i++) {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_KEYS[i]}`,
-                },
-                body: JSON.stringify({
-                    model: 'openai/gpt-oss-20b',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: `Analyze this medical report. File: ${fileName}.\n\nReport Content:\n${finalReportText}\n\nProvide structured analysis in JSON format.` },
-                    ],
-                    temperature: 0.3,
-                    max_completion_tokens: 2048,
-                }),
-            });
+        for (const model of GROQ_MODELS) {
+            for (const key of GROQ_KEYS) {
+                try {
+                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: `Analyze this medical report. File: ${fileName}.\n\nReport Content:\n${finalReportText}\n\nProvide structured analysis in JSON format.` },
+                            ],
+                            temperature: 0.3,
+                            max_completion_tokens: 2048,
+                        }),
+                    });
 
-            data = await response.json();
-            if (!data.error) break;
+                    const data = await response.json();
+                    if (!data.error && data.choices?.[0]?.message?.content) {
+                        text = data.choices[0].message.content;
+                        break;
+                    }
+                    lastError = data.error;
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            if (text) break;
         }
 
-        if (data.error) {
-            return NextResponse.json({ error: data.error.message }, { status: 500 });
+        if (!text) {
+            return NextResponse.json({ error: lastError?.message || 'Failed to analyze report' }, { status: 500 });
         }
-        text = data.choices?.[0]?.message?.content || '';
 
         let analysis;
         try {

@@ -22,15 +22,14 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{
           __html: `
           try {
-            var doc = JSON.parse(localStorage.getItem('hs_current_doctor') || 'null');
-            var isDocPage = window.location.pathname.startsWith('/doctor');
-            if (isDocPage && doc) {
-              var dt = localStorage.getItem('healthsync_doctor_theme') || 'dark';
-              document.documentElement.setAttribute('data-theme', dt);
-            } else {
+            var path = window.location.pathname;
+            var isPatientApp = path.startsWith('/journey') || path.startsWith('/recovery') || path.startsWith('/settings');
+            if (isPatientApp) {
               var u = JSON.parse(localStorage.getItem('healthsync_current_user') || 'null');
               var t = u && u.theme ? u.theme : 'light';
               document.documentElement.setAttribute('data-theme', t);
+            } else {
+              document.documentElement.setAttribute('data-theme', 'light');
             }
           } catch(e) {}
         `}} />

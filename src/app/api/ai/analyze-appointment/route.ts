@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 const GROQ_KEYS = [
     process.env.GROQ_API_KEY_1 || '',
     process.env.GROQ_API_KEY_2 || '',
-];
+].filter(Boolean);
+
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,61 +22,47 @@ Extract and perfectly summarize the following from the transcript:
 
 Format the response cleanly in markdown. Use clear headings. Keep it professional and concise.`;
 
-        let data;
-        for (let i = 0; i < GROQ_KEYS.length; i++) {
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_KEYS[i]}`,
-                },
-                body: JSON.stringify({
-                    model: 'llama3-8b-8192',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: `Analyze this appointment transcript:\n\n${transcript}` },
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 1024,
-                }),
-            });
+        let summary = '';
+        let lastError: any = null;
 
-            data = await response.json();
-            if (!data.error) break;
+        for (const model of GROQ_MODELS) {
+            for (const key of GROQ_KEYS) {
+                try {
+                    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: `Analyze this appointment transcript:\n\n${transcript}` },
+                            ],
+                            temperature: 0.3,
+                            max_completion_tokens: 1024,
+                        }),
+                    });
+
+                    const data = await response.json();
+                    if (!data.error && data.choices?.[0]?.message?.content) {
+                        summary = data.choices[0].message.content;
+                        break;
+                    }
+                    lastError = data.error;
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            if (summary) break;
         }
 
-        if (data.error) {
-            // fallback to openai/gpt-oss-20b
-            for (let i = 0; i < GROQ_KEYS.length; i++) {
-                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${GROQ_KEYS[i]}`,
-                    },
-                    body: JSON.stringify({
-                        model: 'openai/gpt-oss-20b', 
-                        messages: [
-                            { role: 'system', content: systemPrompt },
-                            { role: 'user', content: `Analyze this appointment transcript:\n\n${transcript}` },
-                        ],
-                        temperature: 0.3,
-                        max_tokens: 1024,
-                    }),
-                });
-    
-                data = await response.json();
-                if (!data.error) break;
-            }
-
-            if (data.error) {
-                return NextResponse.json({ error: data.error.message }, { status: 500 });
-            }
+        if (!summary) {
+            return NextResponse.json({ error: lastError?.message || 'Failed to analyze appointment' }, { status: 500 });
         }
 
-        const text = data.choices?.[0]?.message?.content || 'Unable to generate summary.';
-
-        return NextResponse.json({ summary: text });
+        return NextResponse.json({ summary });
     } catch (error) {
         console.error('Appointment Analysis Error:', error);
         return NextResponse.json({ error: 'Failed to analyze appointment' }, { status: 500 });

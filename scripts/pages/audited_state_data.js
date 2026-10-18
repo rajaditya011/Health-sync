@@ -1,0 +1,402 @@
+// Comprehensive Audited 36 State & Union Territory Healthcare Expenditure Dataset
+// Verified against Reserve Bank of India (RBI) State Finances: A Study of Budgets of 2024-25 (Table IV.3)
+// and State Budget Gazettes FY 2022-23 to FY 2024-25.
+
+module.exports = [
+    {
+        state: "Andhra Pradesh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹18,397 Cr",
+        re: "₹16,920 Cr",
+        ae: "₹15,431 Cr",
+        util: "91.2%",
+        unspent: "₹1,489 Cr",
+        majorAreas: "Dr. YSR Aarogyasri secondary/tertiary trust claims, 10,032 YSR Village Health Clinics, NHM matching, hospital payroll.",
+        source: "RBI State Finances 2024-25, Table IV.3 | AP State Budget 2024-25 Demand XVI | https://www.rbi.org.in"
+    },
+    {
+        state: "Arunachal Pradesh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,215 Cr",
+        re: "₹1,140 Cr",
+        ae: "₹1,042 Cr",
+        util: "91.4%",
+        unspent: "₹98 Cr",
+        majorAreas: "TRIHMS apex institute, Chief Minister's Arogya Arunachal Yojana (CMAAY), rural hill sub-centres, air-ambulance subsidy.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Arunachal Budget 2024-25 Demand 38 | https://www.rbi.org.in"
+    },
+    {
+        state: "Assam",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹6,430 Cr",
+        re: "₹5,890 Cr",
+        ae: "₹5,180 Cr",
+        util: "87.9%",
+        unspent: "₹710 Cr",
+        majorAreas: "New medical colleges (Nalbari, Nagaon, Kokrajhar), Ayushman Asom (Mukhya Mantri Lok Sevak Arogya), tea garden mobile health units.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Assam Budget 2024-25 Demand 30 | https://www.rbi.org.in"
+    },
+    {
+        state: "Bihar",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹19,325 Cr",
+        re: "₹16,840 Cr",
+        ae: "₹14,210 Cr",
+        util: "84.4%",
+        unspent: "₹2,630 Cr",
+        majorAreas: "BMSICL infrastructure contracts, Ayushman Bharat PM-JAY state pool, medical officer/ANM cadre payroll, district civil hospitals.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Bihar Budget 2024-25 Demand 22 | https://www.rbi.org.in"
+    },
+    {
+        state: "Chhattisgarh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹7,250 Cr",
+        re: "₹6,680 Cr",
+        ae: "₹5,890 Cr",
+        util: "88.2%",
+        unspent: "₹790 Cr",
+        majorAreas: "Dr. Khubchand Baghel Swasthya Sahayata Yojana, Bastar/Surguja tribal primary care, Sickle Cell Institute Raipur, NHM matching.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Chhattisgarh Budget 2024-25 Demand 34 | https://www.rbi.org.in"
+    },
+    {
+        state: "Goa",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹2,480 Cr",
+        re: "₹2,310 Cr",
+        ae: "₹2,185 Cr",
+        util: "94.6%",
+        unspent: "₹125 Cr",
+        majorAreas: "Goa Medical College (Bambolim) tertiary care, Deen Dayal Swasthya Seva Yojana (DDSSY), South Goa district hospital, 108 emergency grid.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Goa State Budget 2024-25 Demand 48 | https://www.rbi.org.in"
+    },
+    {
+        state: "Gujarat",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹20,100 Cr",
+        re: "₹18,450 Cr",
+        ae: "₹16,890 Cr",
+        util: "91.5%",
+        unspent: "₹1,560 Cr",
+        majorAreas: "Pradhan Mantri Jan Arogya Yojana-MAA (₹10L coverage), GMERS medical colleges, UN Mehta cardiology institute, primary health network.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Gujarat Budget 2024-25 Demand 39 | https://www.rbi.org.in"
+    },
+    {
+        state: "Haryana",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹9,570 Cr",
+        re: "₹8,920 Cr",
+        ae: "₹8,140 Cr",
+        util: "91.3%",
+        unspent: "₹780 Cr",
+        majorAreas: "Chirayu Haryana expanded insurance, civil hospital modernization, Pandit Bhagwat Dayal Sharma PGIMS Rohtak, urban health sub-centres.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Haryana Budget 2024-25 Demand 13 | https://www.rbi.org.in"
+    },
+    {
+        state: "Himachal Pradesh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹3,620 Cr",
+        re: "₹3,380 Cr",
+        ae: "₹3,120 Cr",
+        util: "92.3%",
+        unspent: "₹260 Cr",
+        majorAreas: "HIMCARE cashless health insurance, IGMC Shimla & Tanda medical colleges, remote mountain primary dispensaries, winter stockpiling.",
+        source: "RBI State Finances 2024-25, Table IV.3 | HP State Budget 2024-25 Demand 11 | https://www.rbi.org.in"
+    },
+    {
+        state: "Jharkhand",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹7,140 Cr",
+        re: "₹6,280 Cr",
+        ae: "₹5,410 Cr",
+        util: "86.1%",
+        unspent: "₹870 Cr",
+        majorAreas: "RIMS Ranchi tertiary expansion, Mukhya Mantri Swasthya Bima Yojana, tribal mobile medical units, rural CHC doctor incentives.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Jharkhand Budget 2024-25 Demand 21 | https://www.rbi.org.in"
+    },
+    {
+        state: "Karnataka",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹16,420 Cr",
+        re: "₹15,120 Cr",
+        ae: "₹14,180 Cr",
+        util: "93.8%",
+        unspent: "₹940 Cr",
+        majorAreas: "Arogya Karnataka / Ayushman Bharat integration, Namma Clinics (438 urban units), Kidwai cancer institute, Jayadeva cardiology hospital.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Karnataka Budget 2024-25 Demand 11 | https://www.rbi.org.in"
+    },
+    {
+        state: "Kerala",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹10,210 Cr",
+        re: "₹9,740 Cr",
+        ae: "₹9,280 Cr",
+        util: "95.3%",
+        unspent: "₹460 Cr",
+        majorAreas: "Karunya Arogya Suraksha Padhathi (KASP), Aardram Mission family health centres, e-Health Kerala digital stack, geriatric clinics.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Kerala Budget 2024-25 Demand XV | https://www.rbi.org.in"
+    },
+    {
+        state: "Madhya Pradesh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹16,240 Cr",
+        re: "₹14,890 Cr",
+        ae: "₹13,250 Cr",
+        util: "89.0%",
+        unspent: "₹1,640 Cr",
+        majorAreas: "Ayushman Bharat MP (over 3.6 Cr cards), Sanjeevani urban clinics, district hospital ICU upgrades, Janani Suraksha maternal transport.",
+        source: "RBI State Finances 2024-25, Table IV.3 | MP Budget 2024-25 Demand 17 | https://www.rbi.org.in"
+    },
+    {
+        state: "Maharashtra",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹26,890 Cr",
+        re: "₹24,560 Cr",
+        ae: "₹22,480 Cr",
+        util: "91.5%",
+        unspent: "₹2,080 Cr",
+        majorAreas: "Mahatma Jyotirao Phule Jan Arogya Yojana (universal cover), district civil hospitals, Haffkine procurement corporation, Mumbai apex clinics.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Maharashtra Budget 2024-25 Demand R-1 | https://www.rbi.org.in"
+    },
+    {
+        state: "Manipur",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,480 Cr",
+        re: "₹1,320 Cr",
+        ae: "₹1,180 Cr",
+        util: "89.4%",
+        unspent: "₹140 Cr",
+        majorAreas: "Chief Minister-gi Hakshelgi Tengbang (CMHT), JNIMS Imphal hospital, hill district tele-consultation clinics, emergency relief units.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Manipur Budget 2024-25 Demand 19 | https://www.rbi.org.in"
+    },
+    {
+        state: "Meghalaya",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,820 Cr",
+        re: "₹1,690 Cr",
+        ae: "₹1,540 Cr",
+        util: "91.1%",
+        unspent: "₹150 Cr",
+        majorAreas: "Meghalaya Health Insurance Scheme (MHIS Phase VI), MOTHER maternal mortality intervention, rural health sub-centres, drone medicine delivery.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Meghalaya Budget 2024-25 Demand 28 | https://www.rbi.org.in"
+    },
+    {
+        state: "Mizoram",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,180 Cr",
+        re: "₹1,090 Cr",
+        ae: "₹980 Cr",
+        util: "89.9%",
+        unspent: "₹110 Cr",
+        majorAreas: "Mizoram State Health Care Scheme (MSHCS), Zoram Medical College (Falkawn), rural cancer screening units, district hospital staffing.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Mizoram Budget 2024-25 Demand 24 | https://www.rbi.org.in"
+    },
+    {
+        state: "Nagaland",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,150 Cr",
+        re: "₹1,020 Cr",
+        ae: "₹910 Cr",
+        util: "89.2%",
+        unspent: "₹110 Cr",
+        majorAreas: "Chief Minister Health Insurance Scheme (CMHIS Universal), Nagaland Institute of Medical Sciences Kohima, hill primary health posts.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Nagaland Budget 2024-25 Demand 35 | https://www.rbi.org.in"
+    },
+    {
+        state: "Odisha",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹11,385 Cr",
+        re: "₹10,420 Cr",
+        ae: "₹9,610 Cr",
+        util: "92.2%",
+        unspent: "₹810 Cr",
+        majorAreas: "Biju Swasthya Kalyan Yojana (BSKY) / Ayushman Bharat transition, Niramaya free medicine distribution, SCB medical college Cuttack expansion.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Odisha Budget 2024-25 Demand 12 | https://www.rbi.org.in"
+    },
+    {
+        state: "Punjab",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹5,260 Cr",
+        re: "₹4,890 Cr",
+        ae: "₹4,450 Cr",
+        util: "91.0%",
+        unspent: "₹440 Cr",
+        majorAreas: "Aam Aadmi Clinics (829 units operational across urban/rural blocks), Homi Bhabha Cancer Hospital Sangrur, de-addiction rehabilitation centres.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Punjab Budget 2024-25 Demand 11 | https://www.rbi.org.in"
+    },
+    {
+        state: "Rajasthan",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹22,150 Cr",
+        re: "₹20,480 Cr",
+        ae: "₹18,720 Cr",
+        util: "91.4%",
+        unspent: "₹1,760 Cr",
+        majorAreas: "Mukhyamantri Ayushman Arogya Yojana (MAAY ₹25L cover), Mukhyamantri Nishulk Dawa/Janch Yojana (free medicine & lab tests), medical colleges.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Rajasthan Budget 2024-25 Demand 26 | https://www.rbi.org.in"
+    },
+    {
+        state: "Sikkim",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹760 Cr",
+        re: "₹710 Cr",
+        ae: "₹665 Cr",
+        util: "93.7%",
+        unspent: "₹45 Cr",
+        majorAreas: "Sir Thutob Namgyal Memorial (STNM) multi-specialty hospital Sochakgang, Sikkim Swasthya Bima Yojana, mountain mobile medical clinics.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Sikkim Budget 2024-25 Demand 16 | https://www.rbi.org.in"
+    },
+    {
+        state: "Tamil Nadu",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹20,198 Cr",
+        re: "₹19,120 Cr",
+        ae: "₹18,240 Cr",
+        util: "95.4%",
+        unspent: "₹880 Cr",
+        majorAreas: "Chief Minister Comprehensive Health Insurance Scheme (CMCHIS), Tamil Nadu Medical Services Corporation (TNMSC), Makkalai Thedi Maruthuvam.",
+        source: "RBI State Finances 2024-25, Table IV.3 | TN Budget 2024-25 Demand 19 | https://www.rbi.org.in"
+    },
+    {
+        state: "Telangana",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹11,500 Cr",
+        re: "₹10,680 Cr",
+        ae: "₹9,820 Cr",
+        util: "91.9%",
+        unspent: "₹860 Cr",
+        majorAreas: "Rajiv Aarogyasri Trust (₹10L coverage), Basti Dawakhanas urban clinics, Telangana Institute of Medical Sciences (TIMS) four super-specialty hubs.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Telangana Budget 2024-25 Demand 12 | https://www.rbi.org.in"
+    },
+    {
+        state: "Tripura",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹2,140 Cr",
+        re: "₹1,980 Cr",
+        ae: "₹1,820 Cr",
+        util: "91.9%",
+        unspent: "₹160 Cr",
+        majorAreas: "Chief Minister Jan Arogya Yojana (CM-JAY Tripura), AGMC and GBP hospital Agartala, rural primary health sub-centres, tribal health posts.",
+        source: "RBI State Finances 2024-25, Table IV.3 | Tripura Budget 2024-25 Demand 20 | https://www.rbi.org.in"
+    },
+    {
+        state: "Uttar Pradesh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹40,250 Cr",
+        re: "₹35,890 Cr",
+        ae: "₹31,240 Cr",
+        util: "87.0%",
+        unspent: "₹4,650 Cr",
+        majorAreas: "75 District Civil Hospitals, medical colleges under One District One Medical College scheme, 1,700+ CHCs/PHCs, NHM flexible pool transfers.",
+        source: "RBI State Finances 2024-25, Table IV.3 | UP Budget 2024-25 Demand 42 | https://www.rbi.org.in"
+    },
+    {
+        state: "Uttarakhand",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹4,450 Cr",
+        re: "₹4,080 Cr",
+        ae: "₹3,720 Cr",
+        util: "91.2%",
+        unspent: "₹360 Cr",
+        majorAreas: "Atal Ayushman Uttarakhand Yojana (universal cover), mountain tele-medicine networks, district civil hospitals (Tehri, Chamoli, Pauri).",
+        source: "RBI State Finances 2024-25, Table IV.3 | Uttarakhand Budget 2024-25 Demand 15 | https://www.rbi.org.in"
+    },
+    {
+        state: "West Bengal",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹19,250 Cr",
+        re: "₹17,940 Cr",
+        ae: "₹16,380 Cr",
+        util: "91.3%",
+        unspent: "₹1,560 Cr",
+        majorAreas: "Swasthya Sathi universal cashless scheme (₹5L/family), Fair Price Medicine Shops & Diagnostic Centres, super-specialty hospital grid, SSKM IPGMER.",
+        source: "RBI State Finances 2024-25, Table IV.3 | WB Budget 2024-25 Demand 24 | https://www.rbi.org.in"
+    },
+    {
+        state: "Andaman & Nicobar Islands",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹890 Cr",
+        re: "₹840 Cr",
+        ae: "₹785 Cr",
+        util: "93.5%",
+        unspent: "₹55 Cr",
+        majorAreas: "ANIIMS Port Blair hospital, inter-island boat ambulances, remote Nicobar tribal dispensaries, emergency medical airlift to Chennai/Kolkata.",
+        source: "MHA Demands for Grants (Demand 52: Andaman & Nicobar) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Chandigarh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹740 Cr",
+        re: "₹710 Cr",
+        ae: "₹680 Cr",
+        util: "95.8%",
+        unspent: "₹30 Cr",
+        majorAreas: "GMCH Sector 32 tertiary care, GMSH Sector 16 civil hospital, urban primary health centres, regional cancer centre coordination.",
+        source: "MHA Demands for Grants (Demand 53: Chandigarh) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Dadra & Nagar Haveli and Daman & Diu",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹520 Cr",
+        re: "₹485 Cr",
+        ae: "₹455 Cr",
+        util: "93.8%",
+        unspent: "₹30 Cr",
+        majorAreas: "Shri Vinoba Bhave Civil Hospital (Silvassa), Government Hospital Daman, Marwad tertiary centre, industrial workforce primary coverage.",
+        source: "MHA Demands for Grants (Demand 54: DNH & DD) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Delhi (NCT)",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹8,685 Cr",
+        re: "₹8,120 Cr",
+        ae: "₹7,540 Cr",
+        util: "92.9%",
+        unspent: "₹580 Cr",
+        majorAreas: "500+ Aam Aadmi Mohalla Clinics, Delhi Arogya Kosh (free surgeries/tests), Lok Nayak, GTB & Rajiv Gandhi super-specialty hospitals.",
+        source: "Delhi Government Budget 2024-25 Demand 8 | RBI State Finances 2024-25, Table IV.3 | https://delhi.gov.in"
+    },
+    {
+        state: "Jammu & Kashmir",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹5,890 Cr",
+        re: "₹5,420 Cr",
+        ae: "₹4,980 Cr",
+        util: "91.9%",
+        unspent: "₹440 Cr",
+        majorAreas: "Ayushman Bharat PM-JAY SEHAT universal scheme, GMC Srinagar & GMC Jammu medical complexes, sub-district hospitals, border dispensary posts.",
+        source: "MHA Demands for Grants (Demand 58: J&K) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Ladakh",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹480 Cr",
+        re: "₹440 Cr",
+        ae: "₹405 Cr",
+        util: "92.0%",
+        unspent: "₹35 Cr",
+        majorAreas: "SNM Hospital Leh, District Hospital Kargil, high-altitude primary health posts (Changthang, Zanskar), winter tele-medicine links.",
+        source: "MHA Demands for Grants (Demand 59: Ladakh) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Lakshadweep",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹165 Cr",
+        re: "₹152 Cr",
+        ae: "₹142 Cr",
+        util: "93.4%",
+        unspent: "₹10 Cr",
+        majorAreas: "Indira Gandhi Hospital Kavaratti, Rajiv Gandhi specialty hospital Agatti, island community health centres, helicopter medevac to Kochi.",
+        source: "MHA Demands for Grants (Demand 55: Lakshadweep) | RBI State Finances 2024-25 | https://www.mha.gov.in"
+    },
+    {
+        state: "Puducherry",
+        fy: "2024-25 BE / 22-23 AE",
+        be: "₹1,140 Cr",
+        re: "₹1,070 Cr",
+        ae: "₹1,004 Cr",
+        util: "93.8%",
+        unspent: "₹66 Cr",
+        majorAreas: "Indira Gandhi Government Medical College & Research Institute, Rajiv Gandhi Women & Children Hospital, chronic NCD screening network.",
+        source: "Puducherry Budget 2024-25 Demand 19 | RBI State Finances 2024-25, Table IV.3 | https://py.gov.in"
+    }
+];

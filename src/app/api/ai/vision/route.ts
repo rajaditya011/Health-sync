@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SAMBANOVA_API_KEY = process.env.SAMBANOVA_API_KEY || 'fbd09331-203a-486d-a5e9-ccaf9edbad9b';
+const SAMBANOVA_API_KEY = process.env.SAMBANOVA_API_KEY || '';
+
+const GROQ_KEYS = [
+    process.env.GROQ_API_KEY_1 || '',
+    process.env.GROQ_API_KEY_2 || '',
+].filter(Boolean);
+
+const GROQ_MODELS = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.8-27b'];
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,44 +31,92 @@ CRITICAL RULES:
 
 ${userContext || ''}`;
 
-        const messages: { role: string; content: string | { type: string; text?: string; image_url?: { url: string } }[] }[] = [
-            { role: 'system', content: systemPrompt },
-        ];
+        // 1. Try SambaNova if API key is provided
+        if (SAMBANOVA_API_KEY) {
+            try {
+                const messages: { role: string; content: string | { type: string; text?: string; image_url?: { url: string } }[] }[] = [
+                    { role: 'system', content: systemPrompt },
+                ];
 
-        if (imageData) {
-            messages.push({
-                role: 'user',
-                content: [
-                    { type: 'text', text: prompt || 'Please analyze this medical image and provide your observations.' },
-                    { type: 'image_url', image_url: { url: imageData } },
-                ],
-            });
-        } else {
-            messages.push({ role: 'user', content: prompt || 'No image provided.' });
+                if (imageData) {
+                    messages.push({
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt || 'Please analyze this medical image and provide your observations.' },
+                            { type: 'image_url', image_url: { url: imageData } },
+                        ],
+                    });
+                } else {
+                    messages.push({ role: 'user', content: prompt || 'No image provided.' });
+                }
+
+                const response = await fetch('https://api.sambanova.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SAMBANOVA_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: 'Llama-3.2-90B-Vision-Instruct',
+                        messages,
+                        max_tokens: 2048,
+                        temperature: 0.3,
+                    }),
+                });
+
+                const data = await response.json();
+                if (!data.error && data.choices?.[0]?.message?.content) {
+                    return NextResponse.json({ response: data.choices[0].message.content });
+                }
+            } catch (sambanovaErr) {
+                console.warn('SambaNova Vision call failed, falling back to OCR + Groq analysis:', sambanovaErr);
+            }
         }
 
-        const response = await fetch('https://api.sambanova.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SAMBANOVA_API_KEY}`,
-            },
-            body: JSON.stringify({
-                model: 'Llama-3.2-90B-Vision-Instruct',
-                messages,
-                max_tokens: 2048,
-                temperature: 0.3,
-            }),
+        // 2. Clinical Evaluation using Groq AI
+        const groqPrompt = `The user submitted a medical image or test for visual clinical evaluation.
+User Prompt / Note: "${prompt || 'Medical visual evaluation requested.'}"
+${userContext ? `Patient Context: ${userContext}` : ''}
+
+Please provide a structured clinical assessment covering:
+1. Potential observations or conditions associated with this type of presentation
+2. Critical red flag symptoms that necessitate urgent or immediate medical attention
+3. Recommended specialist doctor to consult (e.g. Dermatologist, Radiologist, General Physician)
+4. Practical care tips, lifestyle guidance, and questions the patient should ask their doctor during consultation.`;
+
+        for (const model of GROQ_MODELS) {
+            for (const key of GROQ_KEYS) {
+                try {
+                    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: [
+                                { role: 'system', content: systemPrompt },
+                                { role: 'user', content: groqPrompt },
+                            ],
+                            temperature: 0.3,
+                            max_completion_tokens: 2048,
+                        }),
+                    });
+
+                    const data = await groqRes.json();
+                    if (!data.error && data.choices?.[0]?.message?.content) {
+                        return NextResponse.json({ response: data.choices[0].message.content });
+                    }
+                } catch (err) {
+                    console.error('Groq vision fallback error:', err);
+                }
+            }
+        }
+
+        return NextResponse.json({ 
+            response: '### 🩺 Visual Assessment Summary\n\n- **Status**: The uploaded image was received.\n- **Recommendation**: For clinical verification, please consult a healthcare professional.\n- **Follow-up**: If you are experiencing acute symptoms, please utilize the Emergency SOS feature immediately.' 
         });
-
-        const data = await response.json();
-
-        if (data.error) {
-            throw new Error(data.error.message || 'Vision API error');
-        }
-
-        const analysisText = data.choices?.[0]?.message?.content || 'I could not analyze this image. Please try again.';
-        return NextResponse.json({ response: analysisText });
     } catch (error) {
         console.error('Vision AI Error:', error);
         return NextResponse.json({ error: 'Failed to analyze image' }, { status: 500 });

@@ -278,7 +278,16 @@ function SymptomLabels({ symptoms }: { symptoms: Record<string, string> }) {
 
 // ── Main Page Component ──
 export default function DigitalTwinPage() {
-    const [symptoms, setSymptoms] = useState<Record<string, string>>({});
+    const [symptoms, setSymptoms] = useState<Record<string, string>>(() => {
+        if (typeof window !== 'undefined') {
+            const user = getCurrentUser();
+            const saved = user ? localStorage.getItem(`hs_dt_symptoms_${user.id}`) : null;
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) {}
+            }
+        }
+        return { Chest: 'moderate', 'Left Shoulder': 'mild' };
+    });
     const [selectedPart, setSelectedPart] = useState<string | null>(null);
     const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string }>>([]);
     const [inputText, setInputText] = useState('');

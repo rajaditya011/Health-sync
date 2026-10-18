@@ -222,7 +222,7 @@ export default function OnboardingPage() {
 
         setTimeout(() => {
             addAIMessage("✨ Your HealthSync profile is ready! Redirecting to dashboard...", true);
-            setTimeout(() => router.push('/dashboard'), 800);
+            setTimeout(() => router.push('/journey/patient-portal'), 800);
         }, 200);
     };
 

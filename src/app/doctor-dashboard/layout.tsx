@@ -30,8 +30,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
         const doc = getCurrentDoctor();
         if (!doc) { router.push('/auth'); return; }
         setDoctor(doc);
-        const t = getDoctorTheme();
-        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-theme', 'light');
     }, [router]);
 
     const handleLogout = () => { clearCurrentDoctor(); router.push('/auth'); };
